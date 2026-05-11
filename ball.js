@@ -386,7 +386,7 @@ function updateBall(b) {
           b.settled = true;
           b.tick = 0;
           b.patrolVy =
-            (Math.random() < 0.5 ? 1 : -1) * (0.4 + (b.total / 100) * 0.6); // total 0→0.4, 100→1.0 고정 속도
+            (Math.random() < 0.5 ? 1 : -1) * (0.2 + (b.total / 100) * 0.4); // total 0→0.4, 100→1.0 고정 속도
         }
       }
     }

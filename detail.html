@@ -482,16 +482,28 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         const img = await loadImg(imgSrc);
-        if (img) {
-          // 이미지를 캔버스 중앙에 그대로 그리기 (원형 클립 없이)
-          ctx.drawImage(img, cx - r, cy - r, r * 2, r * 2);
-        } else {
-          // 이미지 로드 실패 시 색상 원으로 대체
-          ctx.beginPath();
-          ctx.arc(cx, cy, r, 0, Math.PI * 2);
-          ctx.fillStyle = "#888";
-          ctx.fill();
-        }
+if (img) {
+  // 오프스크린에서 색상 합성
+  const offscreen = document.createElement("canvas");
+  offscreen.width  = r * 2;
+  offscreen.height = r * 2;
+  const offCtx = offscreen.getContext("2d");
+
+  offCtx.drawImage(img, 0, 0, r * 2, r * 2);
+  offCtx.globalCompositeOperation = "source-atop";
+  offCtx.globalAlpha = 0.6;        // ← 강도 조절
+  offCtx.fillStyle = person.color || "#88FF00"; // ← person.color가 없으면 기본색
+  offCtx.fillRect(0, 0, r * 2, r * 2);
+  offCtx.globalAlpha = 1;
+  offCtx.globalCompositeOperation = "source-over";
+
+  ctx.drawImage(offscreen, cx - r, cy - r);
+} else {
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fillStyle = "#888";
+  ctx.fill();
+}
       }
 
       // ── 하단 캔버스 물리 ──
@@ -505,33 +517,37 @@
       }
 
       function makeMiniBall(person) {
-        const sev = Math.min(5, Math.max(1, Math.ceil(person.total / 20)));
-        const color = pickColor(sev);
-        const r = 100;
-        const padding = r + 60;
-        const targetY = padding + (person.total / 100) * (othH - padding * 2);
-        const waves = Array.from({ length: 3 }, () => ({
-          amp: 25 + Math.random() * 15,
-          freq: 0.003 + Math.random() * 0.012,
-          phase: Math.random() * Math.PI * 2,
-        }));
+  const sev     = Math.min(5, Math.max(1, Math.ceil(person.total / 20)));
+  const color   = pickColor(sev);
+  const r       = 80 + Math.random() * 20;
+  const padding = r + 20;
+  const targetY = padding + (person.total / 100) * (othH - padding * 2);
 
-        return {
-          name: person.name,
-          total: person.total,
-          type: person.type,
-          imageSrc: pickImage(person.type, person.name),
-          color,
-          r,
-          targetY,
-          x: r + Math.random() * (othW - r * 2),
-          y: targetY, // 처음부터 자기 자리
-          vx: (Math.random() < 0.5 ? 1 : -1) * (2 + Math.random() * 3),
-          vy: 0,
-          tick: Math.random() * 1000,
-          waves,
-        };
-      }
+  const waves = Array.from({ length: 3 }, () => ({
+  amp:   (5 + (person.total / 100) * 20) + Math.random() * 5, // ← total 낮으면 진폭 작게
+  freq:  0.003 + Math.random() * 0.012,
+  phase: Math.random() * Math.PI * 2,
+}));
+
+  return {
+    name:     person.name,
+    total:    person.total,
+    type:     person.type,
+    imageSrc: pickImage(person.type, person.name),
+    color,
+    r,
+    targetY,
+    x:    r + Math.random() * (othW - r * 2),
+    y:    targetY,
+
+    // ← total에 따라 속도 결정
+    vx:   (Math.random() < 0.5 ? 1 : -1) * (0.5 + (person.total / 100) * 3.0),
+    patrolVy: (Math.random() < 0.5 ? 1 : -1) * (0.2 + (person.total / 100) * 0.6),
+
+    tick: Math.random() * 1000,
+    waves,
+  };
+}
 
       function drawMiniBall(b) {
         othCtx.save();
@@ -575,7 +591,8 @@
         let yOff = 0;
         for (const w of b.waves)
           yOff += Math.sin(b.tick * w.freq + w.phase) * w.amp;
-        b.y += (b.targetY + yOff - b.y) * 0.08;
+        const lerpSpeed = 0.02 + (b.total / 100) * 0.06;
+b.y += (b.targetY + yOff - b.y) * lerpSpeed;
 
         if (b.y - b.r < 0) b.y = b.r;
       }
@@ -633,6 +650,7 @@
           }
 
           person.sev = Math.min(5, Math.max(1, Math.ceil(person.total / 20)));
+          
 
           // 정보 채우기
           document.getElementById("person-name").textContent = person.name;

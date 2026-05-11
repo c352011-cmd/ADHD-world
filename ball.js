@@ -245,7 +245,7 @@ function pickTypeColor(type, suspicious_group = 0) {
     const wb = Math.round(b * intensity + 255 * (1 - intensity));
     return `rgb(${wr},${wg},${wb})`;
   }
-  return "#fbfbfb";
+  return "#dadada";
 }
 
 // ================================================================
@@ -406,25 +406,26 @@ function drawBall(b) {
 
   const img = LOADED_IMAGES[b.imageSrc];
   if (img) {
-    // 오프스크린 캔버스에 이미지 + 색상 합성 후 메인 캔버스에 그리기
     const offscreen = document.createElement("canvas");
     const size = b.r * 2;
     offscreen.width = size;
     offscreen.height = size;
     const offCtx = offscreen.getContext("2d");
 
-    // 1. 오프스크린에 이미지 그리기
+    // 1. 원본 이미지
     offCtx.drawImage(img, 0, 0, size, size);
 
-    // 2. 불투명한 부분에만 색상 오버레이
-    offCtx.globalCompositeOperation = "source-atop";
-    offCtx.globalAlpha = 0.6;
+    // 2. multiply로 색상 곱하기 — 어두운 곳은 진해지고 밝은 곳에 색이 입혀짐
+    offCtx.globalCompositeOperation = "multiply";
     offCtx.fillStyle = b.color;
     offCtx.fillRect(0, 0, size, size);
-    offCtx.globalAlpha = 1;
+
+    // 3. 투명 배경 복구 — multiply가 투명 영역을 채우므로 원본 알파로 마스킹
+    offCtx.globalCompositeOperation = "destination-in";
+    offCtx.drawImage(img, 0, 0, size, size);
+
     offCtx.globalCompositeOperation = "source-over";
 
-    // 3. 합성된 결과를 메인 캔버스에 그리기
     ctx.drawImage(offscreen, -b.r, -b.r);
   } else {
     ctx.beginPath();

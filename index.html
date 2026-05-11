@@ -254,6 +254,15 @@
       // ══════════════════════════════════════
       (function () {
         const overlay = document.getElementById("loadingOverlay");
+        // ← 추가: 이미 본 적 있으면 로딩 스킵
+        // 뒤로가기로 온 경우에만 스킵 (새로고침은 항상 로딩 표시)
+        const navEntry = performance.getEntriesByType("navigation")[0];
+        const isBackForward = navEntry && navEntry.type === "back_forward";
+
+        if (isBackForward) {
+          overlay.style.display = "none";
+          return;
+        }
         const wCanvas = document.getElementById("waveCanvas");
         const wCtx = wCanvas.getContext("2d");
         const textEl = document.getElementById("loadingText");

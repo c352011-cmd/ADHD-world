@@ -9,8 +9,18 @@ const USE_GOOGLE_SHEETS = true;
 
 // ── 유형별 이미지 목록 ──
 const TYPE_IMAGES = {
-  A: ["test.png", "test2.png", "images/a3.png"],
-  H: ["images/h1.png", "images/h2.png", "images/h3.png"],
+  H: [
+    "a1.png",
+    "a2.png",
+    "a3.png",
+    "a4.png",
+    "a5.png",
+    "a6.png",
+    "a7.png",
+    "a8.png",
+    "a9.png",
+  ],
+  A: ["images/h1.png", "images/h2.png", "images/h3.png"],
   D: ["images/d1.png", "images/d2.png", "images/d3.png"],
   DD: ["images/d1.png", "images/d2.png", "images/d3.png"],
   NONE: ["images/none1.png", "images/none2.png", "images/none3.png"],
@@ -19,13 +29,40 @@ const TYPE_IMAGES = {
 const LOADED_IMAGES = {};
 
 // ── 색상 팔레트 ──
-const LEVEL_COLORS = {
-  1: ["#FF6600", "#FF0000", "#FF0066", "#CC00FF", "#0000FF"],
-  2: ["#FF4400", "#FF0033", "#FF0088", "#8800FF", "#0044FF"],
-  3: ["#FF3300", "#FF0055", "#DD00CC", "#6600FF", "#0022FF"],
-  4: ["#FF9900", "#FFCC00", "#AAFF00", "#00FF88", "#00FFCC"],
-  5: ["#FFAA00", "#FFE600", "#CCFF00", "#00FF44", "#00FFAA"],
-};
+// 추가:
+const A_COLORS = [
+  "#FF0000",
+  "#FF2200",
+  "#FF4400",
+  "#FF6600",
+  "#FF8800",
+  "#FFAA00",
+  "#FFCC00",
+  "#DDFF00",
+  "#AAFF00",
+  "#88FF00",
+  "#55FF00",
+  "#33FF00",
+];
+const H_COLORS = [
+  "#0000FF",
+  "#0022FF",
+  "#0055FF",
+  "#0088FF",
+  "#00AAFF",
+  "#00CCFF",
+  "#00FFFF",
+  "#00FFDD",
+  "#00FFAA",
+  "#00FF88",
+  "#00FF55",
+  "#00FF22",
+  "#22FF00",
+  "#55FF00",
+  "#AAFF00",
+  "#DDFF00",
+];
+const DH_COLORS = [...A_COLORS, ...H_COLORS]; // D용 합본
 
 const MIN_SPEED = 1;
 const MAX_SPEED = 10.5;
@@ -65,9 +102,27 @@ function pickImage(type) {
   return list[Math.floor(Math.random() * list.length)];
 }
 
-function pickColor(sev) {
-  const p = LEVEL_COLORS[sev];
-  return p[Math.floor(Math.random() * p.length)];
+function pickTypeColor(type, suspicious_group = 0) {
+  if (type === "A")
+    return A_COLORS[Math.floor(Math.random() * A_COLORS.length)];
+  if (type === "H")
+    return H_COLORS[Math.floor(Math.random() * H_COLORS.length)];
+  if (type === "D")
+    return DH_COLORS[Math.floor(Math.random() * DH_COLORS.length)];
+  if (type === "DD") {
+    const base = DH_COLORS[Math.floor(Math.random() * DH_COLORS.length)];
+    const maxVal = suspicious_group > 5 ? 100 : 5;
+    const ratio = Math.min(1, suspicious_group / maxVal);
+    const intensity = 0.3 + ratio * 0.5;
+    const r = parseInt(base.slice(1, 3), 16);
+    const g = parseInt(base.slice(3, 5), 16);
+    const b = parseInt(base.slice(5, 7), 16);
+    const wr = Math.round(r * intensity + 255 * (1 - intensity));
+    const wg = Math.round(g * intensity + 255 * (1 - intensity));
+    const wb = Math.round(b * intensity + 255 * (1 - intensity));
+    return `rgb(${wr},${wg},${wb})`;
+  }
+  return "#AAAAAA";
 }
 
 // ================================================================
@@ -91,7 +146,8 @@ async function loadFromGoogleSheets() {
       const total = parseFloat(get("total")) || 0;
       const type = get("type").toUpperCase() || "A";
       const sev = Math.min(5, Math.max(1, Math.ceil(total / 20)));
-      return { name, total, type, sev };
+      const suspicious_group = parseFloat(get("suspicious_group")) || 0;
+      return { name, total, type, sev, suspicious_group };
     })
     .filter((p) => p.name.length > 0);
 }
@@ -120,8 +176,8 @@ function pctMultiplier(pct) {
 // 공 만들기
 // ================================================================
 function makeBall(person, fromTop, delay) {
-  const { sev, name, total, type } = person;
-  const color = pickColor(sev);
+  const { sev, name, total, type, suspicious_group = 0 } = person;
+  const color = pickTypeColor(type, suspicious_group);
   const imageSrc = pickImage(type);
   const r = 120 + Math.random() * 40;
   const targetY = totalToY(total);
@@ -227,9 +283,6 @@ function drawBall(b) {
 
   const img = LOADED_IMAGES[b.imageSrc];
   if (img) {
-    ctx.beginPath();
-    ctx.arc(0, 0, b.r, 0, Math.PI * 2);
-    ctx.clip();
     ctx.drawImage(img, -b.r, -b.r, b.r * 2, b.r * 2);
   } else {
     ctx.beginPath();
@@ -394,7 +447,7 @@ function updateBall(b) {
     // ── patrol 모드 (settled) ──
   } else {
     // X 이동
-    const liveSpd = 0.8 + (b.total / 100) * 2.5;
+    const liveSpd = 0.5 + (b.total / 100) * 10.0;
     b.x += b.vx;
     if (b.x - b.r < 0) {
       b.x = b.r;

@@ -160,6 +160,42 @@
         display: none;
         white-space: nowrap;
       }
+
+      .searchBox {
+        position: fixed;
+        top: 2rem;
+        right: 2rem;
+        z-index: 100;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .searchInput {
+        padding: 7px 16px;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        background: rgba(255, 255, 255, 0.5);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        font-family: "Cossette Texte", sans-serif;
+        font-size: 1rem;
+        outline: none;
+        box-shadow:
+          0 4px 24px rgba(0, 0, 0, 0.1),
+          inset 0 0.5px 0 rgba(255, 255, 255, 0.6);
+        width: 180px;
+        transition: 0.2s ease;
+      }
+
+      .searchInput:focus {
+        background: rgba(255, 255, 255, 0.8);
+        width: 220px;
+      }
+
+      .searchInput::placeholder {
+        color: rgba(0, 0, 0, 0.35);
+      }
     </style>
   </head>
 
@@ -172,6 +208,15 @@
 
     <div id="wrap">
       <canvas id="canvas"></canvas>
+
+      <div class="searchBox">
+        <input
+          type="text"
+          class="searchInput"
+          id="searchInput"
+          placeholder="seArcH . . ."
+        />
+      </div>
 
       <!-- 타이틀 버튼 (A D H D world) -->
       <div class="bigButton">
@@ -278,12 +323,13 @@
       // ══════════════════════════════════════
       (function () {
         const overlay = document.getElementById("loadingOverlay");
-        // ← 추가: 이미 본 적 있으면 로딩 스킵
-        // 뒤로가기로 온 경우에만 스킵 (새로고침은 항상 로딩 표시)
         const navEntry = performance.getEntriesByType("navigation")[0];
         const isBackForward = navEntry && navEntry.type === "back_forward";
+        const skipLoading = new URLSearchParams(window.location.search).get(
+          "skip",
+        );
 
-        if (isBackForward) {
+        if (isBackForward || skipLoading) {
           overlay.style.display = "none";
           return;
         }
@@ -462,7 +508,7 @@
             clearInterval(glowInterval);
             target.glowing = true;
             setTimeout(() => {
-              targe.glowing = false;
+              target.glowing = false;
             }, 3000);
           }
         }, 300);
@@ -480,10 +526,9 @@
               suspicious_group: 0, // ← 추가
             };
 
-            const tempBall = makeBall(tempPerson, true, 0);
+            const tempBall = makeBall(tempPerson, false, 0); // fromTop=false → 바로 자기 자리
+            tempBall.active = true; // fromTop=false면 active가 false일 수 있으니 명시
             tempBall.glowing = true;
-
-            // ← patrolVy 명시적으로 설정
             tempBall.patrolVy =
               (Math.random() < 0.5 ? 1 : -1) *
               (0.2 + (newBallTotal / 100) * 0.4);
@@ -530,6 +575,38 @@
 
       canvas.addEventListener("mouseleave", () => {
         tooltip.style.display = "none";
+      });
+      // 검색 기능
+      const searchInput = document.getElementById("searchInput");
+
+      searchInput.addEventListener("input", (e) => {
+        const query = e.target.value.trim().toLowerCase();
+
+        // 모든 공 glowing 초기화
+        balls.forEach((b) => {
+          b.glowing = false;
+        });
+
+        if (!query) return;
+
+        // 이름이 일치하는 공 찾아서 glowing
+        const matched = balls.filter((b) =>
+          b.name.toLowerCase().includes(query),
+        );
+
+        matched.forEach((b) => {
+          b.glowing = true;
+        });
+      });
+
+      // 검색창 비우면 glowing 끄기
+      searchInput.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          searchInput.value = "";
+          balls.forEach((b) => {
+            b.glowing = false;
+          });
+        }
       });
     </script>
   </body>

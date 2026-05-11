@@ -588,9 +588,10 @@ function updateBall(b) {
     }
 
     // ── patrol 모드 (settled) ──
+    // ── patrol 모드 (settled) ──
   } else {
-    // X 이동
-    const liveSpd = 0.5 + (b.total / 100) * 12.0;
+    // X 이동 — total에 따라 속도 차이 크게
+    const liveSpd = 0.5 + (b.total / 100) * 12.0; // ← 그대로 유지
     b.x += b.vx;
     if (b.x - b.r < 0) {
       b.x = b.r;
@@ -603,25 +604,28 @@ function updateBall(b) {
     const curSpd = Math.abs(b.vx);
     b.vx += (b.vx > 0 ? 1 : -1) * (liveSpd - curSpd) * 0.04;
 
-    // Y 이동 — 당구공처럼 일정 속도 직선 이동, 경계에서 반사
-    const yRange = 40; // targetY 기준 ±40px 범위
+    // Y 이동 — X와 완전히 독립, 고정된 느린 속도만 사용
+    const yRange = 40;
     const yTop = b.targetY - yRange;
     const yBound = b.targetY + yRange;
+    const fixedVy = 0.2 + (b.total / 100) * 0.3; // ← Y는 항상 느리게 고정
 
-    b.y += b.patrolVy; // 매 프레임 일정하게 이동 (가속 없음)
+    // patrolVy 크기를 fixedVy로 강제 유지
+    b.patrolVy = (b.patrolVy > 0 ? 1 : -1) * fixedVy;
 
-    // 경계 도달 시 방향만 바꿈 — 속도 변화 없음
+    b.y += b.patrolVy;
+
     if (b.y <= yTop) {
       b.y = yTop;
-      b.patrolVy = Math.abs(b.patrolVy);
+      b.patrolVy = fixedVy;
     }
     if (b.y >= yBound) {
       b.y = yBound;
-      b.patrolVy = -Math.abs(b.patrolVy);
+      b.patrolVy = -fixedVy;
     }
-
-    // patrolVy는 처음 설정값 그대로 유지 (변화 없음)
   }
+
+  // patrolVy는 처음 설정값 그대로 유지 (변화 없음)
 }
 
 // ================================================================

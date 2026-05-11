@@ -11,6 +11,10 @@
       rel="stylesheet"
     />
     <style>
+      @font-face {
+        font-family: "kr";
+        src: url("NanumBarunGothic.ttf") format("truetype");
+      }
       * {
         margin: 0;
         padding: 0;
@@ -20,7 +24,7 @@
       body {
         overflow-x: hidden;
         overflow-y: scroll;
-        font-family: "Cossette Texte", sans-serif;
+        font-family: "Cossette Texte", "kr", sans-serif;
         background: linear-gradient(
           180deg,
           #f05 0.01%,
@@ -30,10 +34,9 @@
           #ffa600 96.15%
         );
         min-height: 200vh;
-        color: #000;
+        color: #ffffff;
       }
 
-      /* ── 상단 정보 섹션 ── */
       .info-section {
         display: flex;
         flex-direction: column;
@@ -42,40 +45,41 @@
         text-align: center;
       }
 
-      /* 공 그래픽 캔버스 */
       #ballCanvas {
         display: block;
         margin-bottom: 20px;
       }
 
       .person-name {
-        font-size: 2.2rem;
+        font-size: 1.1rem;
         font-weight: 700;
         margin-bottom: 4px;
         letter-spacing: 1px;
+        margin-top: 25px;
       }
 
       .person-title {
-        font-size: 1.1rem;
+        font-size: 0.9rem;
         opacity: 0.6;
-        margin-bottom: 20px;
-        font-style: italic;
+        color: white;
+        margin-top: 10px;
+        margin-bottom: 10px;
+        /* font-style: italic; */
       }
 
-      /* 수치 바들 */
       .stats {
         width: 100%;
-        max-width: 320px;
+        max-width: 200px;
         display: flex;
         flex-direction: column;
-        gap: 10px;
-        margin-bottom: 24px;
+        gap: 7px;
+        margin-top: 15px;
       }
 
       .stat-bar-wrap {
         background: rgba(255, 255, 255, 0.3);
         border-radius: 50px;
-        height: 10px;
+        height: 15px;
         overflow: hidden;
       }
 
@@ -83,7 +87,6 @@
         height: 100%;
         border-radius: 50px;
         width: 0%;
-        transition: width 0.9s cubic-bezier(0.22, 1, 0.36, 1);
       }
 
       .stat-bar.total-bar {
@@ -91,7 +94,7 @@
       }
 
       .stat-bar.dd-bar {
-        background: linear-gradient(90deg, #a855f7, #ec4899);
+        background: linear-gradient(90deg, #55f793, #ffe643);
       }
 
       .stat-bar.compulsion-bar {
@@ -102,31 +105,50 @@
         font-size: 0.78rem;
         opacity: 0.55;
         letter-spacing: 1.5px;
-        text-transform: uppercase;
-        margin-bottom: 3px;
-        text-align: left;
+        /* text-transform: uppercase; */
+        margin-bottom: 0px;
+        text-align: center;
       }
 
-      /* go bAck 버튼 */
       .backBtn {
-        background: rgba(255, 255, 255, 0.4);
-        border: 1px solid rgba(255, 255, 255, 0.5);
-        border-radius: 14px;
-        padding: 10px 28px;
+        position: fixed;
+        top: 2rem;
+        left: 2rem;
+        z-index: 100;
+        background: rgba(255, 255, 255, 0.5);
+        border: none;
+
         font-family: "Cossette Texte", sans-serif;
         font-size: 1rem;
         cursor: pointer;
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
         transition: 0.2s ease;
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
-        margin-top: 8px;
+
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.4); /* 얇은 흰 테두리 */
+        box-shadow:
+          0 4px 24px rgba(0, 0, 0, 0.1),
+          /* 아래 그림자 */ inset 0 0.5px 0 rgba(255, 255, 255, 0.6); /* 상단 하이라이트 */
+        transition: 0.2s ease;
+
+        padding: 7px 24px;
+        border-radius: 16px;
+
+        white-space: nowrap;
+        width: auto; /* ← 자동 너비 */
+        min-width: unset; /* ← 최소 너비 제거 */
+        max-width: unset; /* ← 최대 너비 제거 */
+        box-sizing: border-box;
       }
       .backBtn:hover {
-        background: rgba(255, 255, 255, 0.65);
+        background: rgba(255, 255, 255, 0.8);
+        transform: scale(1.04);
+
+        box-shadow:
+          0 6px 30px rgba(0, 0, 0, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.7);
       }
 
-      /* ── witH otHer cHArActers 섹션 ── */
       .others-section {
         padding: 0 0 80px;
       }
@@ -136,17 +158,16 @@
         font-size: 1rem;
         letter-spacing: 1px;
         opacity: 0.7;
-        margin-bottom: 0;
         padding: 20px 0 0;
+        margin-top: 100px;
+        color: white;
       }
 
-      /* 캐릭터들 캔버스 */
       #othersCanvas {
         display: block;
         width: 100%;
       }
 
-      /* 로딩 & 에러 */
       #loading {
         text-align: center;
         padding: 80px 0;
@@ -164,27 +185,22 @@
   </head>
 
   <body>
-    <div id="loading">불러오는 중...</div>
-    <div id="error">데이터를 찾을 수 없어요.</div>
+    <div id="loading">loADing...</div>
+    <div id="error">DAtA not founD</div>
 
-    <!-- 상단 정보 -->
     <div class="info-section" id="infoSection" style="display: none">
-      <!-- 공 그래픽 -->
       <canvas id="ballCanvas" width="200" height="200"></canvas>
-
-      <!-- 이름 / 타이틀 -->
       <div class="person-name" id="person-name"></div>
       <div class="person-title" id="person-title"></div>
 
-      <!-- 수치 바 -->
       <div class="stats">
-        <div class="stat-label">total</div>
+        <div class="stat-label">totAl</div>
         <div class="stat-bar-wrap">
           <div class="stat-bar total-bar" id="total-bar"></div>
         </div>
 
         <div class="stat-label" id="dd-label" style="display: none">
-          suspicious group
+          suspicious . . .
         </div>
         <div class="stat-bar-wrap" id="dd-bar-wrap" style="display: none">
           <div class="stat-bar dd-bar" id="dd-bar"></div>
@@ -198,18 +214,15 @@
         </div>
       </div>
 
-      <!-- 뒤로가기 -->
       <button class="backBtn" onclick="history.back()">go bAck</button>
     </div>
 
-    <!-- witH otHer cHArActers -->
     <div class="others-section" id="othersSection" style="display: none">
       <div class="others-label">witH otHer cHArActers</div>
       <canvas id="othersCanvas"></canvas>
     </div>
 
     <script>
-      // ================================================================
       const SHEET_CSV_URL =
         "https://docs.google.com/spreadsheets/d/e/2PACX-1vTBhXcN2APYQhEVXHw6ER56MC4i8mwqviKQH2F1W2G5FB3wR0Z84QHZ-ZFXokMklzmm7YOJNpdG3tws/pub?gid=666310940&single=true&output=csv";
 
@@ -220,6 +233,7 @@
         DD: ["images/dd1.png", "images/dd2.png", "images/dd3.png"],
         NONE: ["images/none1.png", "images/none2.png", "images/none3.png"],
       };
+
       const LOADED_IMAGES = {};
 
       const LEVEL_COLORS = {
@@ -234,12 +248,12 @@
         const list = TYPE_IMAGES[type] || TYPE_IMAGES["A"];
         return list[Math.floor(Math.random() * list.length)];
       }
+
       function pickColor(sev) {
         const p = LEVEL_COLORS[sev];
         return p[Math.floor(Math.random() * p.length)];
       }
 
-      // ── 이미지 로드 ──
       function loadImg(src) {
         return new Promise((resolve) => {
           if (LOADED_IMAGES[src]) {
@@ -256,7 +270,18 @@
         });
       }
 
-      // ── 시트 데이터 ──
+      // 모든 이미지 미리 로드
+      function preloadAllImages() {
+        const allSrcs = [
+          ...TYPE_IMAGES.A,
+          ...TYPE_IMAGES.H,
+          ...TYPE_IMAGES.D,
+          ...TYPE_IMAGES.DD,
+          ...TYPE_IMAGES.NONE,
+        ];
+        return Promise.all(allSrcs.map((src) => loadImg(src)));
+      }
+
       async function loadAllPeople() {
         const res = await fetch(SHEET_CSV_URL);
         const text = await res.text();
@@ -284,13 +309,10 @@
           .filter((p) => p.name.length > 0);
       }
 
-      // URL 파라미터
       const params = new URLSearchParams(window.location.search);
       const targetName = params.get("name");
 
-      // ================================================================
-      // 상단 공 그래픽 (정적 — 중앙에 크게)
-      // ================================================================
+      // ── 상단 공 그래픽 (정적) ──
       async function drawMainBall(person) {
         const canvas = document.getElementById("ballCanvas");
         const ctx = canvas.getContext("2d");
@@ -304,7 +326,6 @@
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 그림자 효과
         ctx.save();
         ctx.shadowColor = "rgba(0,0,0,0.2)";
         ctx.shadowBlur = 20;
@@ -322,28 +343,16 @@
           ctx.clip();
           ctx.drawImage(img, cx - r, cy - r, r * 2, r * 2);
           ctx.restore();
-        } else {
-          ctx.save();
-          ctx.beginPath();
-          ctx.arc(cx, cy, r, 0, Math.PI * 2);
-          ctx.fillStyle = color;
-          ctx.fill();
-          ctx.restore();
         }
       }
 
-      // ================================================================
-      // 하단 캔버스 — witH otHer cHArActers
-      // (처음부터 자기 자리에서 움직임, 하늘에서 내려오지 않음)
-      // ================================================================
+      // ── 하단 캔버스 물리 ──
       let othBalls = [];
       let othW, othH, othRaf;
       let othCanvas, othCtx;
 
-      function computeSpeedFromY_oth(y, totalH) {
-        const topY = 100;
-        const botY = totalH - 100;
-        const frac = Math.max(0, Math.min(1, (y - topY) / (botY - topY)));
+      function computeOthSpeed(y) {
+        const frac = Math.max(0, Math.min(1, (y - 100) / (othH - 200)));
         return 1 + frac * frac * 9.5;
       }
 
@@ -351,13 +360,10 @@
         const sev = Math.min(5, Math.max(1, Math.ceil(person.total / 20)));
         const color = pickColor(sev);
         const r = 44 + Math.random() * 18;
-
-        // total에 따른 Y 위치
-        const padding = r + 20;
+        const padding = r + 60;
         const targetY = padding + (person.total / 100) * (othH - padding * 2);
-
         const waves = Array.from({ length: 3 }, () => ({
-          amp: 25 + Math.random() * 40,
+          amp: 25 + Math.random() * 15,
           freq: 0.003 + Math.random() * 0.012,
           phase: Math.random() * Math.PI * 2,
         }));
@@ -371,7 +377,7 @@
           r,
           targetY,
           x: r + Math.random() * (othW - r * 2),
-          y: targetY, // ← 처음부터 자기 자리
+          y: targetY, // 처음부터 자기 자리
           vx: (Math.random() < 0.5 ? 1 : -1) * (2 + Math.random() * 3),
           vy: 0,
           tick: Math.random() * 1000,
@@ -379,11 +385,9 @@
         };
       }
 
-      function drawMiniball(b) {
+      function drawMiniBall(b) {
         othCtx.save();
         othCtx.translate(b.x, b.y);
-
-        // 그림자
         othCtx.shadowColor = "rgba(0,0,0,0.15)";
         othCtx.shadowBlur = 12;
         othCtx.shadowOffsetY = 5;
@@ -403,11 +407,10 @@
         othCtx.restore();
       }
 
-      function updateMiniball(b) {
+      function updateMiniBall(b) {
         b.tick += 1;
-
-        // 좌우 이동
         b.x += b.vx;
+
         if (b.x - b.r < 0) {
           b.x = b.r;
           b.vx = Math.abs(b.vx) * 0.92;
@@ -417,24 +420,22 @@
           b.vx = -Math.abs(b.vx) * 0.92;
         }
 
-        // 속도 보정
-        const liveSpd =
-          computeSpeedFromY_oth(b.y, othH) * (0.4 + (b.total / 100) * 1.4);
+        const liveSpd = 0.8 + (b.total / 100) * 2.5;
         const curSpd = Math.abs(b.vx);
         b.vx += (b.vx > 0 ? 1 : -1) * (liveSpd - curSpd) * 0.04;
 
-        // Y 드리프트 (사인파)
         let yOff = 0;
         for (const w of b.waves)
           yOff += Math.sin(b.tick * w.freq + w.phase) * w.amp;
-        const targetY_now = b.targetY + yOff;
-        b.y += (targetY_now - b.y) * 0.08;
+        b.y += (b.targetY + yOff - b.y) * 0.08;
+
+        if (b.y - b.r < 0) b.y = b.r;
       }
 
       function othLoop() {
         othCtx.clearRect(0, 0, othW, othH);
-        for (const b of othBalls) drawMiniball(b);
-        for (const b of othBalls) updateMiniball(b);
+        for (const b of othBalls) drawMiniBall(b);
+        for (const b of othBalls) updateMiniBall(b);
         othRaf = requestAnimationFrame(othLoop);
       }
 
@@ -443,29 +444,15 @@
         othCtx = othCanvas.getContext("2d");
 
         othW = window.innerWidth;
-        // 공 수에 따라 높이 결정 (최소 300px)
         othH = Math.max(300, Math.ceil(people.length / 3) * 220);
 
         othCanvas.width = othW;
         othCanvas.height = othH;
         othCanvas.style.height = othH + "px";
 
-        // 이미지 로드 후 공 생성
-        const srcs = [...new Set(people.map((p) => pickImage(p.type)))];
-        let loaded = 0;
-        const tryStart = () => {
-          loaded++;
-          if (loaded >= srcs.length) {
-            othBalls = people.map((p) => makeMiniball(p));
-            othLoop();
-          }
-        };
-        if (srcs.length === 0) {
-          othBalls = people.map((p) => makeMiniball(p));
-          othLoop();
-          return;
-        }
-        srcs.forEach((src) => loadImg(src).then(tryStart));
+        // 이미지 이미 로드됐으니 바로 공 생성
+        othBalls = people.map((p) => makeMiniBall(p));
+        othLoop();
 
         window.addEventListener("resize", () => {
           othW = window.innerWidth;
@@ -476,18 +463,16 @@
         });
       }
 
-      // ================================================================
-      // 메인 init
-      // ================================================================
+      // ── 메인 init ──
       async function init() {
         try {
           const allPeople = await loadAllPeople();
           document.getElementById("loading").style.display = "none";
 
-          // 메인 공 (NONE 아닌 것)
           const person = allPeople.find(
             (p) => p.name === targetName && p.type !== "NONE",
           );
+
           if (!person) {
             document.getElementById("error").style.display = "block";
             return;
@@ -495,54 +480,58 @@
 
           person.sev = Math.min(5, Math.max(1, Math.ceil(person.total / 20)));
 
-          // ── 상단 정보 표시 ──
+          // 정보 채우기
           document.getElementById("person-name").textContent = person.name;
           document.getElementById("person-title").textContent =
             person.title || "";
 
-          // total 바
-          setTimeout(() => {
-            document.getElementById("total-bar").style.width =
-              `${person.total}%`;
-          }, 150);
-
-          // suspicious_group 바 (값 있을 때만)
-          if (person.suspicious_group > 0) {
-            document.getElementById("dd-label").style.display = "block";
-            document.getElementById("dd-bar-wrap").style.display = "block";
-            setTimeout(() => {
-              document.getElementById("dd-bar").style.width =
-                `${(person.suspicious_group / 5) * 100}%`;
-            }, 300);
-          }
-
-          // compulsion 바 (값 있을 때만)
-          if (person.compulsion > 0) {
-            document.getElementById("comp-label").style.display = "block";
-            document.getElementById("comp-bar-wrap").style.display = "block";
-            setTimeout(() => {
-              document.getElementById("comp-bar").style.width =
-                `${(person.compulsion / 5) * 100}%`;
-            }, 450);
-          }
-
           document.getElementById("infoSection").style.display = "flex";
 
-          // 공 그래픽 그리기
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              document.getElementById("total-bar").style.transition =
+                "width 0.9s cubic-bezier(0.22,1,0.36,1)";
+              document.getElementById("total-bar").style.width =
+                `${person.total}%`;
+
+              if (person.suspicious_group > 0) {
+                document.getElementById("dd-label").style.display = "block";
+                document.getElementById("dd-bar-wrap").style.display = "block";
+                setTimeout(() => {
+                  document.getElementById("dd-bar").style.transition =
+                    "width 0.9s cubic-bezier(0.22,1,0.36,1)";
+                  document.getElementById("dd-bar").style.width =
+                    `${person.suspicious_group}%`;
+                }, 150);
+              }
+
+              if (person.compulsion > 0) {
+                document.getElementById("comp-label").style.display = "block";
+                document.getElementById("comp-bar-wrap").style.display =
+                  "block";
+                setTimeout(() => {
+                  document.getElementById("comp-bar").style.transition =
+                    "width 0.9s cubic-bezier(0.22,1,0.36,1)";
+                  document.getElementById("comp-bar").style.width =
+                    `${(person.compulsion / 5) * 100}%`;
+                }, 300);
+              }
+            });
+          });
+
+          // 이미지 모두 로드
+          await preloadAllImages();
+
+          // 상단 공 그래픽
           await drawMainBall(person);
 
-          // ── witH otHer cHArActers ──
+          // 하단 캔버스 — 메인 공 + NONE 공
           const noneMatches = allPeople.filter(
             (p) => p.type === "NONE" && p.title === person.title,
           );
-
-          // 메인 공은 항상 포함 — none 없어도 메인 공은 떠다님
           const otherPeople = [person, ...noneMatches];
 
-          // 조건 제거 — 항상 표시
           document.getElementById("othersSection").style.display = "block";
-
-          await Promise.all(allSrcs.map((src) => loadImg(src)));
           startOthers(otherPeople);
         } catch (err) {
           document.getElementById("loading").style.display = "none";

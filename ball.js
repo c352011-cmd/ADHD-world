@@ -440,6 +440,8 @@ function updateBall(b) {
   } else {
     const liveSpd = computeSpeedFromY(b.y) * pctMultiplier(b.total);
     b.spd = liveSpd;
+
+    // X 이동
     b.x += b.vx;
     if (b.x - b.r < 0) {
       b.x = b.r;
@@ -449,17 +451,38 @@ function updateBall(b) {
       b.x = W - b.r;
       b.vx = -Math.abs(b.vx) * (0.9 + Math.random() * 0.2);
     }
+
+    // X 속도 보정
     const curSpd = Math.abs(b.vx);
     b.vx += (b.vx > 0 ? 1 : -1) * (liveSpd - curSpd) * 0.04;
 
-    // yOff 계산
-    let yOff = 0;
-    for (const w of b.waves)
-      yOff += Math.sin(b.tick * w.freq + w.phase) * w.amp;
+    // Y 이동 — 당구공처럼 직선으로 천천히 이동 + 상하 벽 반사
+    // total 낮을수록 vy 느림
+    const maxVy = 0.3 + (b.total / 100) * 1.2; // total 0→0.3, 100→1.5
+    const yBound = b.targetY + b.r * 3; // 위아래 이동 범위
+    const yTop = Math.max(b.r, b.targetY - b.r * 3);
 
-    // 순간이동 방지 — 목표 y와 현재 y 차이를 서서히 좁힘 (lerp)
-    const targetY_now = b.targetY + yOff;
-    b.y += (targetY_now - b.y) * 0.08; // ← 직접 대입 대신 lerp
+    // vy 초기화 (처음 한 번만)
+    if (!b.vy || b.vy === 0) {
+      b.vy = (Math.random() < 0.5 ? 1 : -1) * (0.2 + (b.total / 100) * 1.0);
+    }
+
+    b.y += b.vy;
+
+    // 상하 벽 반사 (targetY ± 범위 안에서)
+    if (b.y + b.r > yBound) {
+      b.y = yBound - b.r;
+      b.vy = -Math.abs(b.vy);
+    }
+    if (b.y - b.r < yTop) {
+      b.y = yTop + b.r;
+      b.vy = Math.abs(b.vy);
+    }
+
+    // vy 크기 유지 (속도가 너무 달라지지 않게)
+    const curVy = Math.abs(b.vy);
+    if (curVy > maxVy) b.vy = (b.vy > 0 ? 1 : -1) * maxVy;
+    if (curVy < 0.1) b.vy = (b.vy > 0 ? 1 : -1) * 0.1;
   }
 }
 // ================================================================

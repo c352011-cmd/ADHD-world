@@ -119,7 +119,67 @@ const H_COLORS = [
   "#AAFF00",
   "#DDFF00",
 ];
-const DH_COLORS = [...A_COLORS, ...H_COLORS]; // D용 합본
+const DH_COLORS = [
+  "#0000FF",
+  "#0022FF",
+  "#0055FF",
+  "#0088FF",
+  "#00AAFF",
+  "#00CCFF",
+  "#00FFFF",
+  "#00FFDD",
+  "#00FFAA",
+  "#00FF88",
+  "#00FF55",
+  "#00FF22",
+  "#22FF00",
+  "#55FF00",
+  "#AAFF00",
+  "#DDFF00",
+  "#FF0000",
+  "#FF2200",
+  "#FF4400",
+  "#FF6600",
+  "#FF8800",
+  "#FFAA00",
+  "#FFCC00",
+  "#DDFF00",
+  "#AAFF00",
+  "#88FF00",
+  "#55FF00",
+  "#33FF00",
+]; // D용 합본
+
+const DD_COLORS = [
+  "#0000FF",
+  "#0022FF",
+  "#0055FF",
+  "#0088FF",
+  "#00AAFF",
+  "#00CCFF",
+  "#00FFFF",
+  "#00FFDD",
+  "#00FFAA",
+  "#00FF88",
+  "#00FF55",
+  "#00FF22",
+  "#22FF00",
+  "#55FF00",
+  "#AAFF00",
+  "#DDFF00",
+  "#FF0000",
+  "#FF2200",
+  "#FF4400",
+  "#FF6600",
+  "#FF8800",
+  "#FFAA00",
+  "#FFCC00",
+  "#DDFF00",
+  "#AAFF00",
+  "#88FF00",
+  "#55FF00",
+  "#33FF00",
+];
 
 const MIN_SPEED = 1;
 const MAX_SPEED = 10.5;
@@ -185,7 +245,7 @@ function pickTypeColor(type, suspicious_group = 0) {
     const wb = Math.round(b * intensity + 255 * (1 - intensity));
     return `rgb(${wr},${wg},${wb})`;
   }
-  return "#AAAAAA";
+  return "#fbfbfb";
 }
 
 // ================================================================
@@ -346,17 +406,26 @@ function drawBall(b) {
 
   const img = LOADED_IMAGES[b.imageSrc];
   if (img) {
-    ctx.drawImage(img, -b.r, -b.r, b.r * 2, b.r * 2);
+    // 오프스크린 캔버스에 이미지 + 색상 합성 후 메인 캔버스에 그리기
+    const offscreen = document.createElement("canvas");
+    const size = b.r * 2;
+    offscreen.width = size;
+    offscreen.height = size;
+    const offCtx = offscreen.getContext("2d");
 
-    // 유형별 색상 오버레이
-    ctx.globalCompositeOperation = "color";
-    ctx.globalAlpha = 0.6; // ← 색감 강도 (0=원본, 1=완전히 덮음)
-    ctx.fillStyle = b.color;
-    ctx.beginPath();
-    ctx.arc(0, 0, b.r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalAlpha = 1;
-    ctx.globalCompositeOperation = "source-over";
+    // 1. 오프스크린에 이미지 그리기
+    offCtx.drawImage(img, 0, 0, size, size);
+
+    // 2. 불투명한 부분에만 색상 오버레이
+    offCtx.globalCompositeOperation = "source-atop";
+    offCtx.globalAlpha = 0.6;
+    offCtx.fillStyle = b.color;
+    offCtx.fillRect(0, 0, size, size);
+    offCtx.globalAlpha = 1;
+    offCtx.globalCompositeOperation = "source-over";
+
+    // 3. 합성된 결과를 메인 캔버스에 그리기
+    ctx.drawImage(offscreen, -b.r, -b.r);
   } else {
     ctx.beginPath();
     ctx.arc(0, 0, b.r, 0, Math.PI * 2);

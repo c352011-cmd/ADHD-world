@@ -477,9 +477,17 @@
               total: newBallTotal,
               type: newBallType.toUpperCase(),
               sev: Math.min(5, Math.max(1, Math.ceil(newBallTotal / 20))),
+              suspicious_group: 0, // ← 추가
             };
+
             const tempBall = makeBall(tempPerson, true, 0);
             tempBall.glowing = true;
+
+            // ← patrolVy 명시적으로 설정
+            tempBall.patrolVy =
+              (Math.random() < 0.5 ? 1 : -1) *
+              (0.2 + (newBallTotal / 100) * 0.4);
+
             balls.push(tempBall);
             setTimeout(() => {
               tempBall.glowing = false;
@@ -494,9 +502,8 @@
 
       canvas.style.pointerEvents = "auto"; // index.html은 이게 없으니 추가
       canvas.addEventListener("mousemove", (e) => {
-        const rect = canvas.getBoundingClientRect();
-        const mx = e.clientX - rect.left;
-        const my = e.clientY - rect.top + window.scrollY;
+        const mx = e.pageX; // ← clientX 대신 pageX
+        const my = e.pageY; // ← clientY + scrollY 대신 pageY 바로 사용
 
         let hovered = null;
         for (const b of balls) {
@@ -512,8 +519,7 @@
         if (hovered) {
           tooltip.textContent = hovered.name;
           tooltip.style.display = "block";
-          // 공 오른쪽 위에 표시
-          tooltip.style.left = `${e.clientX + 16}px`;
+          tooltip.style.left = `${e.clientX + 16}px`; // 툴팁 위치는 clientX/Y 유지
           tooltip.style.top = `${e.clientY - 16}px`;
           canvas.style.cursor = "pointer";
         } else {

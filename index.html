@@ -17,6 +17,38 @@
         box-sizing: border-box;
       }
 
+      /* ── 로딩 오버레이 ── */
+      #loadingOverlay {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #000;
+        overflow: hidden;
+      }
+
+      #waveCanvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      .loading-text {
+        position: relative;
+        z-index: 10;
+        font-family: "Cossette Texte", sans-serif;
+        font-size: clamp(1.2rem, 3.5vw, 2rem);
+        color: rgba(0, 0, 0, 0.7);
+        letter-spacing: 2px;
+        min-height: 2.5rem;
+        text-align: center;
+        min-width: 300px;
+      }
+
+      /* ── 기존 스타일 ── */
       body {
         overflow-x: hidden;
         overflow-y: scroll;
@@ -30,12 +62,8 @@
           #ffa600 96.15%
         );
         font-family: "Cossette Texte", sans-serif;
-
-        /* background-attachment: fixed; ← 스크롤해도 배경 고정 */
-        font-family: "Cossette Texte", sans-serif;
       }
 
-      /* 전체 스크롤 영역 */
       #wrap {
         width: 100%;
         height: 400vh;
@@ -43,7 +71,6 @@
         overflow: visible;
       }
 
-      /* 캔버스 — 페이지 전체를 덮음 */
       #canvas {
         display: block;
         position: absolute;
@@ -51,10 +78,9 @@
         left: 0;
         width: 100%;
         z-index: 2;
-        pointer-events: none; /* 캔버스 아래 버튼 클릭 가능 */
+        pointer-events: none;
       }
 
-      /* 타이틀 버튼 영역 */
       .bigButton {
         position: absolute;
         top: -1rem;
@@ -71,18 +97,6 @@
         fill: #00ff40;
       }
 
-      /* .worldButton:hover .title-text-dd {
-        fill: #ff0d00;
-      } */
-
-      /* .title-text-dd {
-        display: inline-flex;
-        padding-top: 90px;
-        flex-direction: column;
-        justify-content: flex-end;
-        align-items: center;
-      } */
-
       .worldButton {
         border: none;
         background: transparent;
@@ -90,7 +104,6 @@
         padding: 0;
       }
 
-      /* tHrow your bAll 버튼 */
       .makeB {
         position: fixed;
         bottom: 3rem;
@@ -98,32 +111,26 @@
         transform: translateX(-50%);
         z-index: 100;
         display: flex;
-
         justify-content: center;
         align-items: center;
-
         background: rgba(255, 255, 255, 0.5);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
         border: none;
         font-family: "Cossette Texte", sans-serif;
         font-size: 1.3rem;
         cursor: pointer;
-
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.4); /* 얇은 흰 테두리 */
+        border: 1px solid rgba(255, 255, 255, 0.4);
         box-shadow:
           0 4px 24px rgba(0, 0, 0, 0.1),
-          /* 아래 그림자 */ inset 0 0.5px 0 rgba(255, 255, 255, 0.6); /* 상단 하이라이트 */
+          inset 0 0.5px 0 rgba(255, 255, 255, 0.6);
         transition: 0.2s ease;
-
         padding: 7px 24px;
         border-radius: 16px;
-
         white-space: nowrap;
-        width: auto; /* ← 자동 너비 */
-        min-width: unset; /* ← 최소 너비 제거 */
-        max-width: unset; /* ← 최대 너비 제거 */
+        width: auto;
+        min-width: unset;
+        max-width: unset;
         box-sizing: border-box;
       }
 
@@ -135,6 +142,12 @@
   </head>
 
   <body>
+    <!-- ── 로딩 오버레이 ── -->
+    <div id="loadingOverlay">
+      <canvas id="waveCanvas"></canvas>
+      <div class="loading-text" id="loadingText"></div>
+    </div>
+
     <div id="wrap">
       <canvas id="canvas"></canvas>
 
@@ -153,7 +166,6 @@
             fill="none"
           >
             <path
-              class="title-text"
               class="title-text"
               d="M56.8733 345.661H117.456L87.0408 107.384L56.8733 345.661ZM127.099 421.723H47.2295L28.4366 569.191H0L74.4298 -5.15665H102.619L174.329 568.415H145.892L127.099 421.723Z"
               fill="black"
@@ -237,7 +249,124 @@
 
     <!-- 2. 이 페이지만의 코드 -->
     <script>
-      // 캔버스 & 컨텍스트 설정
+      // ══════════════════════════════════════
+      // 로딩 화면
+      // ══════════════════════════════════════
+      (function () {
+        const overlay = document.getElementById("loadingOverlay");
+        const wCanvas = document.getElementById("waveCanvas");
+        const wCtx = wCanvas.getContext("2d");
+        const textEl = document.getElementById("loadingText");
+
+        function resizeWave() {
+          wCanvas.width = window.innerWidth;
+          wCanvas.height = window.innerHeight;
+        }
+        resizeWave();
+        window.addEventListener("resize", resizeWave);
+
+        const COLORS = [
+          [0, 255, 255],
+          [0, 100, 255],
+          [150, 0, 255],
+          [255, 0, 200],
+          [255, 100, 0],
+          [255, 220, 0],
+          [0, 255, 100],
+        ];
+
+        const waveStart = Date.now();
+
+        function drawWaves() {
+          const W = wCanvas.width;
+          const H = wCanvas.height;
+          const cx = W / 2;
+          const cy = H / 2;
+          const t = (Date.now() - waveStart) / 1000;
+          const maxR = Math.sqrt(cx * cx + cy * cy) * 1.5;
+
+          wCtx.clearRect(0, 0, W, H);
+
+          const RINGS = 200;
+          for (let i = RINGS; i >= 0; i--) {
+            const frac = i / RINGS;
+            const r = frac * maxR;
+
+            // 색상만 시간에 따라 흘러감 — 무한 순환
+            const ci = (frac * COLORS.length * 1 - t * 5) % COLORS.length;
+            const ci0 =
+              ((Math.floor(ci) % COLORS.length) + COLORS.length) %
+              COLORS.length;
+            const ci1 = (ci0 + 1) % COLORS.length;
+            const bl = ci - Math.floor(ci);
+            const rc = Math.round(
+              COLORS[ci0][0] * (1 - bl) + COLORS[ci1][0] * bl,
+            );
+            const gc = Math.round(
+              COLORS[ci0][1] * (1 - bl) + COLORS[ci1][1] * bl,
+            );
+            const bc = Math.round(
+              COLORS[ci0][2] * (1 - bl) + COLORS[ci1][2] * bl,
+            );
+
+            wCtx.save();
+            wCtx.translate(cx, cy);
+            wCtx.scale(1, 0.58);
+            wCtx.beginPath();
+            wCtx.arc(0, 0, r, 0, Math.PI * 2);
+            wCtx.fillStyle = `rgb(${rc},${gc},${bc})`;
+            wCtx.fill();
+            wCtx.restore();
+          }
+        }
+
+        const MESSAGES = [
+          "A is entering . . .",
+          "D is entering . . .",
+          "H is entering . . .",
+          "d . . . may enter",
+        ];
+
+        let msgIdx = 0;
+        let charIdx = 0;
+
+        function typeNext() {
+          if (msgIdx >= MESSAGES.length) {
+            setTimeout(finishLoading, 1000);
+            return;
+          }
+          const msg = MESSAGES[msgIdx];
+          charIdx++;
+          textEl.textContent = msg.slice(0, charIdx);
+
+          if (charIdx >= msg.length) {
+            setTimeout(() => {
+              msgIdx++;
+              charIdx = 0;
+              typeNext();
+            }, 800);
+          } else {
+            setTimeout(typeNext, 100);
+          }
+        }
+
+        let waveRaf;
+        function waveLoop() {
+          drawWaves();
+          waveRaf = requestAnimationFrame(waveLoop);
+        }
+        waveLoop();
+        setTimeout(typeNext, 300);
+
+        function finishLoading() {
+          cancelAnimationFrame(waveRaf);
+          overlay.style.display = "none";
+        }
+      })();
+
+      // ══════════════════════════════════════
+      // 기존 페이지 코드
+      // ══════════════════════════════════════
       const canvas = document.getElementById("canvas");
       const ctx = canvas.getContext("2d");
       const wrap = document.getElementById("wrap");
@@ -246,7 +375,6 @@
         balls = [],
         raf;
 
-      // 초기화 & 시트 데이터 로드
       async function init() {
         resize();
         let people = [];
@@ -268,7 +396,6 @@
         });
       }
 
-      // 클릭 이벤트는 init() 완전히 밖에, window에 등록
       window.addEventListener("click", (e) => {
         const rect = canvas.getBoundingClientRect();
         const mx = e.clientX - rect.left;
@@ -287,6 +414,7 @@
 
       window.addEventListener("resize", resize);
       init();
+
       // 새로 생성된 공 빛 테두리 효과
       const urlParams = new URLSearchParams(window.location.search);
       const newBallName = urlParams.get("newball");
@@ -306,23 +434,20 @@
           }
         }, 300);
 
-        // 5초 후에도 못 찾으면 — 임시 공을 직접 만들어서 glow 표시
         setTimeout(() => {
           if (!found) {
             clearInterval(glowInterval);
-
-            // URL 파라미터에서 type도 받아오거나 기본값 사용
+            const newBallType = urlParams.get("type") || "A";
+            const newBallTotal = parseInt(urlParams.get("total")) || 50;
             const tempPerson = {
               name: newBallName,
-              total: 50,
-              type: "A",
-              sev: 3,
+              total: newBallTotal,
+              type: newBallType.toUpperCase(),
+              sev: Math.min(5, Math.max(1, Math.ceil(newBallTotal / 20))),
             };
-
             const tempBall = makeBall(tempPerson, true, 0);
             tempBall.glowing = true;
             balls.push(tempBall);
-
             setTimeout(() => {
               tempBall.glowing = false;
             }, 3000);

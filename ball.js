@@ -8,16 +8,14 @@ const SHEET_CSV_URL =
 const USE_GOOGLE_SHEETS = true;
 
 // ── 유형별 이미지 목록 ──
-// 실제 파일명으로 교체하세요
 const TYPE_IMAGES = {
-  A: ["images/a1.png", "images/a2.png", "images/a3.png"],
+  A: ["test.png", "test2.png", "images/a3.png"],
   H: ["images/h1.png", "images/h2.png", "images/h3.png"],
   D: ["images/d1.png", "images/d2.png", "images/d3.png"],
   DD: ["images/d1.png", "images/d2.png", "images/d3.png"],
   NONE: ["images/none1.png", "images/none2.png", "images/none3.png"],
 };
 
-// 로드된 이미지를 저장하는 객체
 const LOADED_IMAGES = {};
 
 // ── 색상 팔레트 ──
@@ -29,12 +27,11 @@ const LEVEL_COLORS = {
   5: ["#FFAA00", "#FFE600", "#CCFF00", "#00FF44", "#00FFAA"],
 };
 
-// ── 속도 설정 ──
 const MIN_SPEED = 1;
 const MAX_SPEED = 10.5;
 
 // ================================================================
-// 이미지 미리 로드 (깜빡임 방지)
+// 이미지 미리 로드
 // ================================================================
 function preloadImages(callback) {
   const allImages = [
@@ -44,35 +41,30 @@ function preloadImages(callback) {
     ...TYPE_IMAGES.DD,
   ];
   let loaded = 0;
-
-  // 이미지가 없을 경우 바로 callback 실행
   if (allImages.length === 0) {
     callback();
     return;
   }
-
   allImages.forEach((src) => {
     const img = new Image();
     img.src = src;
     img.onload = () => {
       loaded++;
-      LOADED_IMAGES[src] = img; // 로드 성공한 이미지 저장
+      LOADED_IMAGES[src] = img;
       if (loaded === allImages.length) callback();
     };
     img.onerror = () => {
-      loaded++; // 로드 실패해도 건너뜀
+      loaded++;
       if (loaded === allImages.length) callback();
     };
   });
 }
 
-// 유형에 맞는 이미지 중 랜덤으로 하나 선택
 function pickImage(type) {
   const list = TYPE_IMAGES[type] || TYPE_IMAGES["A"];
   return list[Math.floor(Math.random() * list.length)];
 }
 
-// 심각도에 맞는 색상 랜덤 선택
 function pickColor(sev) {
   const p = LEVEL_COLORS[sev];
   return p[Math.floor(Math.random() * p.length)];
@@ -95,29 +87,24 @@ async function loadFromGoogleSheets() {
       const cols = row.split(",");
       const get = (key) =>
         (cols[headers.indexOf(key)] || "").trim().replace(/"/g, "");
-
       const name = get("name");
       const total = parseFloat(get("total")) || 0;
-      const type = get("type").toUpperCase() || "A"; // A / H / D
+      const type = get("type").toUpperCase() || "A";
       const sev = Math.min(5, Math.max(1, Math.ceil(total / 20)));
-
       return { name, total, type, sev };
     })
     .filter((p) => p.name.length > 0);
 }
 
 // ================================================================
-// 위치 계산 — total(0~100)을 Y 픽셀 위치로 변환
+// 위치 계산
 // ================================================================
 function totalToY(total) {
   const totalHeight = document.body.scrollHeight;
-  const padding = 100;
+  const padding = 180; // ← r(120~160)보다 크게 — 위쪽 잘림 방지
   return padding + (total / 100) * (totalHeight - padding * 2);
 }
 
-// ================================================================
-// 속도 계산 — Y 위치가 낮을수록 빠름
-// ================================================================
 function computeSpeedFromY(y) {
   const topY = totalToY(0);
   const botY = totalToY(100);
@@ -125,7 +112,6 @@ function computeSpeedFromY(y) {
   return MIN_SPEED + frac * frac * (MAX_SPEED - MIN_SPEED);
 }
 
-// total 값에 따른 속도 배율 (높을수록 빠름)
 function pctMultiplier(pct) {
   return 0.4 + (pct / 100) * 1.4;
 }
@@ -137,24 +123,26 @@ function makeBall(person, fromTop, delay) {
   const { sev, name, total, type } = person;
   const color = pickColor(sev);
   const imageSrc = pickImage(type);
-  const r = 48 + Math.random() * 20;
+  const r = 120 + Math.random() * 40;
   const targetY = totalToY(total);
   const initVx = (Math.random() < 0.5 ? 1 : -1) * (3.5 + Math.random() * 4);
-  const waves = Array.from({ length: 3 }, () => ({
-    amp: 30 + Math.random() * 50,
-    freq: 0.003 + Math.random() * 0.014,
-    phase: Math.random() * Math.PI * 2,
-  }));
+
+  // patrol용 초기 vy — 처음부터 값을 부여해서 settled 후 바로 자연스럽게 이동
+  const initVy = (Math.random() < 0.5 ? 1 : -1) * (0.4 + (total / 100) * 0.6);
+
+  // total에 따라 중력 다르게 — 높을수록 빠르게 낙하
+  const gravity = 0.08 + (total / 100) * 0.1;
 
   return {
     name,
     total,
     type,
     imageSrc,
-    x: r + Math.random() * (W - r * 2),
+    x: r + Math.random() * Math.max(1, W - r * 2),
     y: fromTop ? -r * 2 : targetY,
     vx: initVx,
     vy: 0,
+    patrolVy: initVy, // ← patrol 전용 vy (settling 물리의 vy와 분리)
     r,
     color,
     sev,
@@ -165,16 +153,14 @@ function makeBall(person, fromTop, delay) {
     bounceCount: 0,
     restitution: 0.88,
     wallRestitution: 0.94,
-    gravity: 0.12,
-    waves,
-    tick: Math.random() * 1000,
+    gravity,
+    tick: 0,
     dropDelay: delay || 0,
     dropTimer: 0,
     active: !fromTop,
     panelOpen: false,
-
-    personalPhase: Math.random() * Math.PI * 2, // ← 추가
-    sortTick: 0, // ← 추가
+    personalPhase: Math.random() * Math.PI * 2,
+    sortTick: 0,
     sortDropping: false,
   };
 }
@@ -187,7 +173,6 @@ function drawBall(b) {
   ctx.save();
   ctx.translate(b.x, b.y);
 
-  // 낙하 중 squash & stretch
   let sx = 1,
     sy = 1;
   if (b.settling) {
@@ -203,7 +188,6 @@ function drawBall(b) {
   }
   ctx.scale(sx, sy);
 
-  // 선택된 공 테두리 (panelOpen일 때)
   if (b.panelOpen) {
     ctx.beginPath();
     ctx.arc(0, 0, b.r + 6, 0, Math.PI * 2);
@@ -211,44 +195,36 @@ function drawBall(b) {
     ctx.lineWidth = 3;
     ctx.stroke();
   }
-  // 새로 생성된 공 빛 테두리 (맥동)
+
   if (b.glowing) {
-    const now = Date.now();
-    const pulse = Math.sin(now / 300) * 0.5 + 0.5; // 천천히 맥동
-
+    const pulse = Math.sin(Date.now() / 300) * 0.5 + 0.5;
     ctx.save();
-
-    // ── 레이어 1: 가장 넓은 바깥 글로우 ──
     const grd1 = ctx.createRadialGradient(0, 0, b.r, 0, 0, b.r * 3.5);
-    grd1.addColorStop(0, `rgba(255, 255, 255, ${0.15 + pulse * 0.1})`);
-    grd1.addColorStop(1, `rgba(255, 255, 255, 0)`);
+    grd1.addColorStop(0, `rgba(255,255,255,${0.15 + pulse * 0.1})`);
+    grd1.addColorStop(1, `rgba(255,255,255,0)`);
     ctx.beginPath();
     ctx.arc(0, 0, b.r * 3.5, 0, Math.PI * 2);
     ctx.fillStyle = grd1;
     ctx.fill();
 
-    // ── 레이어 2: 중간 글로우 ──
     const grd2 = ctx.createRadialGradient(0, 0, b.r, 0, 0, b.r * 2.2);
-    grd2.addColorStop(0, `rgba(255, 255, 255, ${0.35 + pulse * 0.2})`);
-    grd2.addColorStop(1, `rgba(255, 255, 255, 0)`);
+    grd2.addColorStop(0, `rgba(255,255,255,${0.35 + pulse * 0.2})`);
+    grd2.addColorStop(1, `rgba(255,255,255,0)`);
     ctx.beginPath();
     ctx.arc(0, 0, b.r * 2.2, 0, Math.PI * 2);
     ctx.fillStyle = grd2;
     ctx.fill();
 
-    // ── 레이어 3: 테두리 바로 바깥 강한 빛 ──
     const grd3 = ctx.createRadialGradient(0, 0, b.r * 0.9, 0, 0, b.r * 1.4);
-    grd3.addColorStop(0, `rgba(255, 255, 255, ${0.6 + pulse * 0.4})`);
-    grd3.addColorStop(1, `rgba(255, 255, 255, 0)`);
+    grd3.addColorStop(0, `rgba(255,255,255,${0.6 + pulse * 0.4})`);
+    grd3.addColorStop(1, `rgba(255,255,255,0)`);
     ctx.beginPath();
     ctx.arc(0, 0, b.r * 1.4, 0, Math.PI * 2);
     ctx.fillStyle = grd3;
     ctx.fill();
-
     ctx.restore();
   }
 
-  // 이미지가 로드됐으면 이미지로, 아직이면 색상 원으로
   const img = LOADED_IMAGES[b.imageSrc];
   if (img) {
     ctx.beginPath();
@@ -261,12 +237,11 @@ function drawBall(b) {
     ctx.fillStyle = b.color;
     ctx.fill();
   }
-
   ctx.restore();
 }
 
 // ================================================================
-// 공 물리 업데이트 (매 프레임 호출)
+// 공 물리 업데이트
 // ================================================================
 function updateBall(b) {
   if (!b.active) {
@@ -283,31 +258,24 @@ function updateBall(b) {
     return;
   }
 
-  // ── 정렬 모드 2: 각자 성격대로 꼼지락 ──
+  // ── 정렬 모드 2: 꼼지락 ──
   if (b.sorting && b.sortStarted && !b.sortDropping) {
     b.sortTick = (b.sortTick || 0) + 1;
-
-    // 진폭: 4제곱 → 아주 오래 작게 유지되다 후반에만 커짐
-    const personalGrow = 0.001 + (b.total / 100) * 0.003; // ← 매우 느리게
+    const personalGrow = 0.001 + (b.total / 100) * 0.003;
     const growProgress = Math.min(b.sortTick * personalGrow, 1);
-    const eased = growProgress * growProgress * growProgress * growProgress; // ← 4제곱
-
+    const eased = growProgress ** 4;
     const maxAmp = 10 + (b.total / 100) * 50;
-    const amp = eased * maxAmp;
-
-    // 떨림: 주파수 높여서 자잘하게
-    const xFreq = 0.18 + (b.total / 100) * 0.14; // ← 높은 주파수 = 빠른 잔떨림
-    const xAmp = amp + 2; // 최소 2px는 항상 떨림 (초반에도 미세하게 보이게)
+    const xFreq = 0.18 + (b.total / 100) * 0.14;
+    const xAmp = eased * maxAmp + 2;
 
     b.x =
       b.sortTargetX +
       Math.sin(b.sortTick * xFreq + b.personalPhase) * xAmp +
       Math.sin(b.sortTick * xFreq * 2.1 + 0.8) * xAmp * 0.15;
 
-    // Y: 진폭 50% 넘어서야 합류, 주파수는 X보다 느림
     const yFreq = xFreq * 0.45;
-    const yProgress = Math.max(0, growProgress - 0.5) / 0.5; // 50% 이후 시작
-    const yEased = yProgress * yProgress * yProgress;
+    const yProgress = Math.max(0, growProgress - 0.5) / 0.5;
+    const yEased = yProgress ** 3;
     const yAmp = yEased * maxAmp * 0.3 * ((b.total / 100) * 0.7 + 0.3);
 
     b.y =
@@ -317,28 +285,17 @@ function updateBall(b) {
 
     if (b.x - b.r < 0) b.x = b.r;
     if (b.x + b.r > W) b.x = W - b.r;
-
     return;
   }
 
-  // ── 정렬 모드 3: 이탈 — 벽 튕기며 아래로 낙하 ──
-  // ── 정렬 3: 벽 튕기며 이동 (위/아래 모두) ──
+  // ── 정렬 모드 3: 이탈 ──
   if (b.sortDropping) {
-    // 현재 위치에서 targetY까지의 방향 판단
-    const goingUp = b.targetY < b.y; // targetY가 위에 있으면 위로 이동
-
+    const goingUp = b.targetY < b.y;
     if (goingUp) {
-      // ── 위로 올라가는 경우 ──
-      // 중력 반대로 — 위쪽으로 가속
       b.vy -= b.gravity;
-
-      // 너무 빠르게 올라가지 않도록 최대 속도 제한
       if (b.vy < -12) b.vy = -12;
-
       b.y += b.vy;
       b.x += b.vx;
-
-      // 좌우 벽 튕기기
       if (b.x - b.r < 0) {
         b.x = b.r;
         b.vx = Math.abs(b.vx) * b.wallRestitution;
@@ -347,15 +304,11 @@ function updateBall(b) {
         b.x = W - b.r;
         b.vx = -Math.abs(b.vx) * b.wallRestitution;
       }
-
-      // targetY 도달 (위에서 체크 — y가 targetY보다 작아지면)
       if (b.y <= b.targetY) {
         const overshoot = b.targetY - b.y;
         b.y = b.targetY + overshoot;
         b.vy = Math.abs(b.vy) * b.restitution;
-        b.bounceCount++;
         b.restitution = Math.max(0.38, b.restitution - 0.038);
-
         if (Math.abs(b.vy) < 0.4 && overshoot < 2) {
           b.vy = 0;
           b.sortDropping = false;
@@ -368,11 +321,9 @@ function updateBall(b) {
         }
       }
     } else {
-      // ── 아래로 내려가는 경우 (기존 코드 그대로) ──
       b.vy += b.gravity;
       b.y += b.vy;
       b.x += b.vx;
-
       if (b.x - b.r < 0) {
         b.x = b.r;
         b.vx = Math.abs(b.vx) * b.wallRestitution;
@@ -381,14 +332,11 @@ function updateBall(b) {
         b.x = W - b.r;
         b.vx = -Math.abs(b.vx) * b.wallRestitution;
       }
-
       if (b.y >= b.targetY) {
         const overshoot = b.y - b.targetY;
         b.y = b.targetY - overshoot;
         b.vy = -Math.abs(b.vy) * b.restitution;
-        b.bounceCount++;
         b.restitution = Math.max(0.38, b.restitution - 0.038);
-
         if (Math.abs(b.vy) < 0.4 && overshoot < 0.5) {
           b.vy = 0;
           b.sortDropping = false;
@@ -404,8 +352,7 @@ function updateBall(b) {
     return;
   }
 
-  // ── 기존 물리 ──
-  // ── 기존 물리 ──
+  // ── 낙하 & 정착 (settling) ──
   if (b.settling) {
     b.vy += b.gravity;
     b.y += b.vy;
@@ -421,27 +368,33 @@ function updateBall(b) {
     }
 
     if (b.y >= b.targetY) {
-      const overshoot = b.y - b.targetY;
-      b.y = overshoot < b.r ? b.targetY - overshoot : b.targetY;
+      const over = b.y - b.targetY;
+      b.y = b.targetY - over; // 순간이동 없이 항상 반사
       b.vy = -Math.abs(b.vy) * b.restitution;
-      b.bounceCount++;
+      b.restitution = Math.max(
+        0.2,
+        b.restitution - 0.06 + (b.total / 100) * 0.04,
+      );
 
-      const decay = 0.02 + (b.total / 100) * 0.04;
-      b.restitution = Math.max(0.35, b.restitution - decay);
-
-      const settleThreshold = 0.15 + (b.total / 100) * 0.35;
-      if (Math.abs(b.vy) < settleThreshold) {
-        b.vy = 0;
-        b.settling = false;
-        b.settled = true;
-        b.tick = 0; // ← 추가! patrol yOff가 0에서 시작
+      // vy가 작아지면 lerp로 부드럽게 targetY에 수렴 후 정착
+      if (Math.abs(b.vy) < 1.5) {
+        b.y += (b.targetY - b.y) * 0.15; // lerp — 끊김 없이 수렴
+        if (Math.abs(b.vy) < 0.4) {
+          b.y = b.targetY;
+          b.vy = 0;
+          b.settling = false;
+          b.settled = true;
+          b.tick = 0;
+          b.patrolVy =
+            (Math.random() < 0.5 ? 1 : -1) * (0.4 + (b.total / 100) * 0.6); // total 0→0.4, 100→1.0 고정 속도
+        }
       }
     }
-  } else {
-    const liveSpd = computeSpeedFromY(b.y) * pctMultiplier(b.total);
-    b.spd = liveSpd;
 
+    // ── patrol 모드 (settled) ──
+  } else {
     // X 이동
+    const liveSpd = 0.8 + (b.total / 100) * 2.5;
     b.x += b.vx;
     if (b.x - b.r < 0) {
       b.x = b.r;
@@ -451,40 +404,30 @@ function updateBall(b) {
       b.x = W - b.r;
       b.vx = -Math.abs(b.vx) * (0.9 + Math.random() * 0.2);
     }
-
-    // X 속도 보정
     const curSpd = Math.abs(b.vx);
     b.vx += (b.vx > 0 ? 1 : -1) * (liveSpd - curSpd) * 0.04;
 
-    // Y 이동 — 당구공처럼 직선으로 천천히 이동 + 상하 벽 반사
-    // total 낮을수록 vy 느림
-    const maxVy = 0.3 + (b.total / 100) * 1.2; // total 0→0.3, 100→1.5
-    const yBound = b.targetY + b.r * 3; // 위아래 이동 범위
-    const yTop = Math.max(b.r, b.targetY - b.r * 3);
+    // Y 이동 — 당구공처럼 일정 속도 직선 이동, 경계에서 반사
+    const yRange = 40; // targetY 기준 ±40px 범위
+    const yTop = b.targetY - yRange;
+    const yBound = b.targetY + yRange;
 
-    // vy 초기화 (처음 한 번만)
-    if (!b.vy || b.vy === 0) {
-      b.vy = (Math.random() < 0.5 ? 1 : -1) * (0.2 + (b.total / 100) * 1.0);
+    b.y += b.patrolVy; // 매 프레임 일정하게 이동 (가속 없음)
+
+    // 경계 도달 시 방향만 바꿈 — 속도 변화 없음
+    if (b.y <= yTop) {
+      b.y = yTop;
+      b.patrolVy = Math.abs(b.patrolVy);
+    }
+    if (b.y >= yBound) {
+      b.y = yBound;
+      b.patrolVy = -Math.abs(b.patrolVy);
     }
 
-    b.y += b.vy;
-
-    // 상하 벽 반사 (targetY ± 범위 안에서)
-    if (b.y + b.r > yBound) {
-      b.y = yBound - b.r;
-      b.vy = -Math.abs(b.vy);
-    }
-    if (b.y - b.r < yTop) {
-      b.y = yTop + b.r;
-      b.vy = Math.abs(b.vy);
-    }
-
-    // vy 크기 유지 (속도가 너무 달라지지 않게)
-    const curVy = Math.abs(b.vy);
-    if (curVy > maxVy) b.vy = (b.vy > 0 ? 1 : -1) * maxVy;
-    if (curVy < 0.1) b.vy = (b.vy > 0 ? 1 : -1) * 0.1;
+    // patrolVy는 처음 설정값 그대로 유지 (변화 없음)
   }
 }
+
 // ================================================================
 // 캔버스 크기 조정
 // ================================================================
@@ -496,7 +439,7 @@ function resize() {
 }
 
 // ================================================================
-// 애니메이션 루프 (매 프레임 실행)
+// 애니메이션 루프
 // ================================================================
 function loop() {
   ctx.clearRect(0, 0, W, H);

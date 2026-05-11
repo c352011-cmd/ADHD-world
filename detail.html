@@ -170,9 +170,12 @@
 
       #loading {
         text-align: center;
-        padding: 80px 0;
+        /* padding: 80px 0; */
         font-size: 1.2rem;
         opacity: 0.7;
+        position: fixed;
+        top: 50%;
+        left: 50%;
       }
       #error {
         text-align: center;
@@ -206,13 +209,13 @@
           <div class="stat-bar dd-bar" id="dd-bar"></div>
         </div>
 
-        <div class="stat-label" id="comp-label" style="display: none">
+        <!-- <div class="stat-label" id="comp-label" style="display: none">
           compulsion
         </div>
         <div class="stat-bar-wrap" id="comp-bar-wrap" style="display: none">
           <div class="stat-bar compulsion-bar" id="comp-bar"></div>
         </div>
-      </div>
+      </div> -->
 
       <button class="backBtn" onclick="history.back()">go bAck</button>
     </div>
@@ -227,11 +230,78 @@
         "https://docs.google.com/spreadsheets/d/e/2PACX-1vTBhXcN2APYQhEVXHw6ER56MC4i8mwqviKQH2F1W2G5FB3wR0Z84QHZ-ZFXokMklzmm7YOJNpdG3tws/pub?gid=666310940&single=true&output=csv";
 
       const TYPE_IMAGES = {
-        A: ["images/a1.png", "images/a2.png", "images/a3.png"],
-        H: ["images/h1.png", "images/h2.png", "images/h3.png"],
-        D: ["images/d1.png", "images/d2.png", "images/d3.png"],
-        DD: ["images/dd1.png", "images/dd2.png", "images/dd3.png"],
-        NONE: ["images/none1.png", "images/none2.png", "images/none3.png"],
+        H: [
+          "a1.png",
+          "a2.png",
+          "a3.png",
+          "a4.png",
+          "a5.png",
+          "a6.png",
+          "a7.png",
+          "a8.png",
+          "a9.png",
+        ],
+        A: [
+          "h1.png",
+          "h2.png",
+          "h3.png",
+          "h4.png",
+          "h5.png",
+          "h6.png",
+          "h7.png",
+          "h8.png",
+          "h9.png",
+        ],
+        D: [
+          "d1.png",
+          "d2.png",
+          "d3.png",
+          "d4.png",
+          "d5.png",
+          "d6.png",
+          "d7.png",
+          "d8.png",
+          "d9.png",
+        ],
+        DD: [
+          "d1.png",
+          "d2.png",
+          "d3.png",
+          "d4.png",
+          "d5.png",
+          "d6.png",
+          "d7.png",
+          "d8.png",
+          "d9.png",
+          "h1.png",
+          "h2.png",
+          "h3.png",
+          "h4.png",
+          "h5.png",
+          "h6.png",
+          "h7.png",
+          "h8.png",
+          "h9.png",
+          "a1.png",
+          "a2.png",
+          "a3.png",
+          "a4.png",
+          "a5.png",
+          "a6.png",
+          "a7.png",
+          "a8.png",
+          "a9.png",
+        ],
+        NONE: [
+          "n1.png",
+          "n2.png",
+          "n3.png",
+          "n4.png",
+          "n5.png",
+          "n6.png",
+          "n7.png",
+          "n8.png",
+        ],
       };
 
       const LOADED_IMAGES = {};
@@ -244,9 +314,15 @@
         5: ["#FFAA00", "#FFE600", "#CCFF00", "#00FF44", "#00FFAA"],
       };
 
-      function pickImage(type) {
+      function pickImage(type, name = "") {
         const list = TYPE_IMAGES[type] || TYPE_IMAGES["A"];
-        return list[Math.floor(Math.random() * list.length)];
+        if (!name) return list[Math.floor(Math.random() * list.length)];
+        let hash = 0;
+        for (let i = 0; i < name.length; i++) {
+          // ← person.name → name
+          hash = (hash * 31 + name.charCodeAt(i)) % list.length;
+        }
+        return list[hash];
       }
 
       function pickColor(sev) {
@@ -318,11 +394,11 @@
         const ctx = canvas.getContext("2d");
         const cx = canvas.width / 2;
         const cy = canvas.height / 2;
-        const r = 80;
+        const r = 100;
 
         // 유형별 이미지 목록 (ball.js의 TYPE_IMAGES와 동일하게)
         const TYPE_IMAGES = {
-          A: [
+          H: [
             "a1.png",
             "a2.png",
             "a3.png",
@@ -333,14 +409,75 @@
             "a8.png",
             "a9.png",
           ],
-          H: ["images/h1.png", "images/h2.png", "images/h3.png"],
-          D: ["images/d1.png", "images/d2.png", "images/d3.png"],
-          DD: ["images/dd1.png", "images/dd2.png", "images/dd3.png"],
-          NONE: ["images/none1.png", "images/none2.png", "images/none3.png"],
+          A: [
+            "h1.png",
+            "h2.png",
+            "h3.png",
+            "h4.png",
+            "h5.png",
+            "h6.png",
+            "h7.png",
+            "h8.png",
+            "h9.png",
+          ],
+          D: [
+            "d1.png",
+            "d2.png",
+            "d3.png",
+            "d4.png",
+            "d5.png",
+            "d6.png",
+            "d7.png",
+            "d8.png",
+            "d9.png",
+          ],
+          DD: [
+            "d1.png",
+            "d2.png",
+            "d3.png",
+            "d4.png",
+            "d5.png",
+            "d6.png",
+            "d7.png",
+            "d8.png",
+            "d9.png",
+            "h1.png",
+            "h2.png",
+            "h3.png",
+            "h4.png",
+            "h5.png",
+            "h6.png",
+            "h7.png",
+            "h8.png",
+            "h9.png",
+            "a1.png",
+            "a2.png",
+            "a3.png",
+            "a4.png",
+            "a5.png",
+            "a6.png",
+            "a7.png",
+            "a8.png",
+            "a9.png",
+          ],
+          NONE: [
+            "n1.png",
+            "n2.png",
+            "n3.png",
+            "n4.png",
+            "n5.png",
+            "n6.png",
+            "n7.png",
+            "n8.png",
+          ],
         };
 
         const list = TYPE_IMAGES[person.type] || TYPE_IMAGES["A"];
-        const imgSrc = list[Math.floor(Math.random() * list.length)];
+        let hash = 0;
+        for (let i = 0; i < person.name.length; i++) {
+          hash = (hash * 31 + person.name.charCodeAt(i)) % list.length;
+        }
+        const imgSrc = list[hash];
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -370,7 +507,7 @@
       function makeMiniBall(person) {
         const sev = Math.min(5, Math.max(1, Math.ceil(person.total / 20)));
         const color = pickColor(sev);
-        const r = 44 + Math.random() * 18;
+        const r = 100;
         const padding = r + 60;
         const targetY = padding + (person.total / 100) * (othH - padding * 2);
         const waves = Array.from({ length: 3 }, () => ({
@@ -383,7 +520,7 @@
           name: person.name,
           total: person.total,
           type: person.type,
-          imageSrc: pickImage(person.type),
+          imageSrc: pickImage(person.type, person.name),
           color,
           r,
           targetY,
@@ -479,6 +616,12 @@
         try {
           const allPeople = await loadAllPeople();
           document.getElementById("loading").style.display = "none";
+
+          console.log("URL 이름:", targetName);
+          console.log(
+            "시트 이름들:",
+            allPeople.map((p) => `[${p.name}] type:${p.type}`),
+          );
 
           const person = allPeople.find(
             (p) => p.name === targetName && p.type !== "NONE",

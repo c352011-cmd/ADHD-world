@@ -71,7 +71,16 @@ const TYPE_IMAGES = {
     "a8.png",
     "a9.png",
   ],
-  NONE: ["images/none1.png", "images/none2.png", "images/none3.png"],
+  NONE: [
+    "n1.png",
+    "n2.png",
+    "n3.png",
+    "n4.png",
+    "n5.png",
+    "n6.png",
+    "n7.png",
+    "n8.png",
+  ],
 };
 
 const LOADED_IMAGES = {};
@@ -145,9 +154,15 @@ function preloadImages(callback) {
   });
 }
 
-function pickImage(type) {
+function pickImage(type, name = "") {
   const list = TYPE_IMAGES[type] || TYPE_IMAGES["A"];
-  return list[Math.floor(Math.random() * list.length)];
+  if (!name) return list[Math.floor(Math.random() * list.length)];
+  // name 기반 해시 — 항상 같은 이미지 선택
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = (hash * 31 + name.charCodeAt(i)) % list.length;
+  }
+  return list[hash];
 }
 
 function pickTypeColor(type, suspicious_group = 0) {
@@ -226,7 +241,7 @@ function pctMultiplier(pct) {
 function makeBall(person, fromTop, delay) {
   const { sev, name, total, type, suspicious_group = 0 } = person;
   const color = pickTypeColor(type, suspicious_group);
-  const imageSrc = pickImage(type);
+  const imageSrc = pickImage(type, name);
   const r = 120 + Math.random() * 40;
   const targetY = totalToY(total);
   const initVx = (Math.random() < 0.5 ? 1 : -1) * (3.5 + Math.random() * 4);
@@ -332,6 +347,16 @@ function drawBall(b) {
   const img = LOADED_IMAGES[b.imageSrc];
   if (img) {
     ctx.drawImage(img, -b.r, -b.r, b.r * 2, b.r * 2);
+
+    // 유형별 색상 오버레이
+    ctx.globalCompositeOperation = "color";
+    ctx.globalAlpha = 0.6; // ← 색감 강도 (0=원본, 1=완전히 덮음)
+    ctx.fillStyle = b.color;
+    ctx.beginPath();
+    ctx.arc(0, 0, b.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = "source-over";
   } else {
     ctx.beginPath();
     ctx.arc(0, 0, b.r, 0, Math.PI * 2);

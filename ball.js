@@ -20,9 +20,57 @@ const TYPE_IMAGES = {
     "a8.png",
     "a9.png",
   ],
-  A: ["images/h1.png", "images/h2.png", "images/h3.png"],
-  D: ["images/d1.png", "images/d2.png", "images/d3.png"],
-  DD: ["images/d1.png", "images/d2.png", "images/d3.png"],
+  A: [
+    "h1.png",
+    "h2.png",
+    "h3.png",
+    "h4.png",
+    "h5.png",
+    "h6.png",
+    "h7.png",
+    "h8.png",
+    "h9.png",
+  ],
+  D: [
+    "d1.png",
+    "d2.png",
+    "d3.png",
+    "d4.png",
+    "d5.png",
+    "d6.png",
+    "d7.png",
+    "d8.png",
+    "d9.png",
+  ],
+  DD: [
+    "d1.png",
+    "d2.png",
+    "d3.png",
+    "d4.png",
+    "d5.png",
+    "d6.png",
+    "d7.png",
+    "d8.png",
+    "d9.png",
+    "h1.png",
+    "h2.png",
+    "h3.png",
+    "h4.png",
+    "h5.png",
+    "h6.png",
+    "h7.png",
+    "h8.png",
+    "h9.png",
+    "a1.png",
+    "a2.png",
+    "a3.png",
+    "a4.png",
+    "a5.png",
+    "a6.png",
+    "a7.png",
+    "a8.png",
+    "a9.png",
+  ],
   NONE: ["images/none1.png", "images/none2.png", "images/none3.png"],
 };
 
@@ -447,7 +495,7 @@ function updateBall(b) {
     // ── patrol 모드 (settled) ──
   } else {
     // X 이동
-    const liveSpd = 0.5 + (b.total / 100) * 10.0;
+    const liveSpd = 0.5 + (b.total / 100) * 12.0;
     b.x += b.vx;
     if (b.x - b.r < 0) {
       b.x = b.r;

@@ -320,29 +320,40 @@
         const cy = canvas.height / 2;
         const r = 80;
 
-        const imgSrc = pickImage(person.type);
-        const img = await loadImg(imgSrc);
-        const color = pickColor(person.sev);
+        // 유형별 이미지 목록 (ball.js의 TYPE_IMAGES와 동일하게)
+        const TYPE_IMAGES = {
+          A: [
+            "a1.png",
+            "a2.png",
+            "a3.png",
+            "a4.png",
+            "a5.png",
+            "a6.png",
+            "a7.png",
+            "a8.png",
+            "a9.png",
+          ],
+          H: ["images/h1.png", "images/h2.png", "images/h3.png"],
+          D: ["images/d1.png", "images/d2.png", "images/d3.png"],
+          DD: ["images/dd1.png", "images/dd2.png", "images/dd3.png"],
+          NONE: ["images/none1.png", "images/none2.png", "images/none3.png"],
+        };
+
+        const list = TYPE_IMAGES[person.type] || TYPE_IMAGES["A"];
+        const imgSrc = list[Math.floor(Math.random() * list.length)];
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        ctx.save();
-        ctx.shadowColor = "rgba(0,0,0,0.2)";
-        ctx.shadowBlur = 20;
-        ctx.shadowOffsetY = 8;
-        ctx.beginPath();
-        ctx.arc(cx, cy, r, 0, Math.PI * 2);
-        ctx.fillStyle = color;
-        ctx.fill();
-        ctx.restore();
-
+        const img = await loadImg(imgSrc);
         if (img) {
-          ctx.save();
+          // 이미지를 캔버스 중앙에 그대로 그리기 (원형 클립 없이)
+          ctx.drawImage(img, cx - r, cy - r, r * 2, r * 2);
+        } else {
+          // 이미지 로드 실패 시 색상 원으로 대체
           ctx.beginPath();
           ctx.arc(cx, cy, r, 0, Math.PI * 2);
-          ctx.clip();
-          ctx.drawImage(img, cx - r, cy - r, r * 2, r * 2);
-          ctx.restore();
+          ctx.fillStyle = "#888";
+          ctx.fill();
         }
       }
 

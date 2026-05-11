@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Detail</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cossette+Texte:wght@400;700&family=Roboto+Flex:opsz,wght@8..144,100..1000&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        overflow-x: hidden;
+        overflow-y: scroll;
+        font-family: "Cossette Texte", sans-serif;
+        background: linear-gradient(
+          180deg,
+          #f05 0.01%,
+          #d400ff 20.67%,
+          #0015ff 52.88%,
+          #00ffd0 76.44%,
+          #ffa600 96.15%
+        );
+        min-height: 200vh;
+        color: #000;
+      }
+
+      /* ── 상단 정보 섹션 ── */
+      .info-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 60px 24px 40px;
+        text-align: center;
+      }
+
+      /* 공 그래픽 캔버스 */
+      #ballCanvas {
+        display: block;
+        margin-bottom: 20px;
+      }
+
+      .person-name {
+        font-size: 2.2rem;
+        font-weight: 700;
+        margin-bottom: 4px;
+        letter-spacing: 1px;
+      }
+
+      .person-title {
+        font-size: 1.1rem;
+        opacity: 0.6;
+        margin-bottom: 20px;
+        font-style: italic;
+      }
+
+      /* 수치 바들 */
+      .stats {
+        width: 100%;
+        max-width: 320px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 24px;
+      }
+
+      .stat-bar-wrap {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 50px;
+        height: 10px;
+        overflow: hidden;
+      }
+
+      .stat-bar {
+        height: 100%;
+        border-radius: 50px;
+        width: 0%;
+        transition: width 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      .stat-bar.total-bar {
+        background: linear-gradient(90deg, #00ff88, #ffcc00, #ff0055);
+      }
+
+      .stat-bar.dd-bar {
+        background: linear-gradient(90deg, #a855f7, #ec4899);
+      }
+
+      .stat-bar.compulsion-bar {
+        background: linear-gradient(90deg, #3b82f6, #06b6d4);
+      }
+
+      .stat-label {
+        font-size: 0.78rem;
+        opacity: 0.55;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        margin-bottom: 3px;
+        text-align: left;
+      }
+
+      /* go bAck 버튼 */
+      .backBtn {
+        background: rgba(255, 255, 255, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 14px;
+        padding: 10px 28px;
+        font-family: "Cossette Texte", sans-serif;
+        font-size: 1rem;
+        cursor: pointer;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        transition: 0.2s ease;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        margin-top: 8px;
+      }
+      .backBtn:hover {
+        background: rgba(255, 255, 255, 0.65);
+      }
+
+      /* ── witH otHer cHArActers 섹션 ── */
+      .others-section {
+        padding: 0 0 80px;
+      }
+
+      .others-label {
+        text-align: center;
+        font-size: 1rem;
+        letter-spacing: 1px;
+        opacity: 0.7;
+        margin-bottom: 0;
+        padding: 20px 0 0;
+      }
+
+      /* 캐릭터들 캔버스 */
+      #othersCanvas {
+        display: block;
+        width: 100%;
+      }
+
+      /* 로딩 & 에러 */
+      #loading {
+        text-align: center;
+        padding: 80px 0;
+        font-size: 1.2rem;
+        opacity: 0.7;
+      }
+      #error {
+        text-align: center;
+        padding: 80px 0;
+        font-size: 1.1rem;
+        color: #ff4444;
+        display: none;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="loading">불러오는 중...</div>
+    <div id="error">데이터를 찾을 수 없어요.</div>
+
+    <!-- 상단 정보 -->
+    <div class="info-section" id="infoSection" style="display: none">
+      <!-- 공 그래픽 -->
+      <canvas id="ballCanvas" width="200" height="200"></canvas>
+
+      <!-- 이름 / 타이틀 -->
+      <div class="person-name" id="person-name"></div>
+      <div class="person-title" id="person-title"></div>
+
+      <!-- 수치 바 -->
+      <div class="stats">
+        <div class="stat-label">total</div>
+        <div class="stat-bar-wrap">
+          <div class="stat-bar total-bar" id="total-bar"></div>
+        </div>
+
+        <div class="stat-label" id="dd-label" style="display: none">
+          suspicious group
+        </div>
+        <div class="stat-bar-wrap" id="dd-bar-wrap" style="display: none">
+          <div class="stat-bar dd-bar" id="dd-bar"></div>
+        </div>
+
+        <div class="stat-label" id="comp-label" style="display: none">
+          compulsion
+        </div>
+        <div class="stat-bar-wrap" id="comp-bar-wrap" style="display: none">
+          <div class="stat-bar compulsion-bar" id="comp-bar"></div>
+        </div>
+      </div>
+
+      <!-- 뒤로가기 -->
+      <button class="backBtn" onclick="history.back()">go bAck</button>
+    </div>
+
+    <!-- witH otHer cHArActers -->
+    <div class="others-section" id="othersSection" style="display: none">
+      <div class="others-label">witH otHer cHArActers</div>
+      <canvas id="othersCanvas"></canvas>
+    </div>
+
+    <script>
+      // ================================================================
+      const SHEET_CSV_URL =
+        "https://docs.google.com/spreadsheets/d/e/2PACX-1vTBhXcN2APYQhEVXHw6ER56MC4i8mwqviKQH2F1W2G5FB3wR0Z84QHZ-ZFXokMklzmm7YOJNpdG3tws/pub?gid=666310940&single=true&output=csv";
+
+      const TYPE_IMAGES = {
+        A: ["images/a1.png", "images/a2.png", "images/a3.png"],
+        H: ["images/h1.png", "images/h2.png", "images/h3.png"],
+        D: ["images/d1.png", "images/d2.png", "images/d3.png"],
+        DD: ["images/dd1.png", "images/dd2.png", "images/dd3.png"],
+        NONE: ["images/none1.png", "images/none2.png", "images/none3.png"],
+      };
+      const LOADED_IMAGES = {};
+
+      const LEVEL_COLORS = {
+        1: ["#FF6600", "#FF0000", "#FF0066", "#CC00FF", "#0000FF"],
+        2: ["#FF4400", "#FF0033", "#FF0088", "#8800FF", "#0044FF"],
+        3: ["#FF3300", "#FF0055", "#DD00CC", "#6600FF", "#0022FF"],
+        4: ["#FF9900", "#FFCC00", "#AAFF00", "#00FF88", "#00FFCC"],
+        5: ["#FFAA00", "#FFE600", "#CCFF00", "#00FF44", "#00FFAA"],
+      };
+
+      function pickImage(type) {
+        const list = TYPE_IMAGES[type] || TYPE_IMAGES["A"];
+        return list[Math.floor(Math.random() * list.length)];
+      }
+      function pickColor(sev) {
+        const p = LEVEL_COLORS[sev];
+        return p[Math.floor(Math.random() * p.length)];
+      }
+
+      // ── 이미지 로드 ──
+      function loadImg(src) {
+        return new Promise((resolve) => {
+          if (LOADED_IMAGES[src]) {
+            resolve(LOADED_IMAGES[src]);
+            return;
+          }
+          const img = new Image();
+          img.onload = () => {
+            LOADED_IMAGES[src] = img;
+            resolve(img);
+          };
+          img.onerror = () => resolve(null);
+          img.src = src;
+        });
+      }
+
+      // ── 시트 데이터 ──
+      async function loadAllPeople() {
+        const res = await fetch(SHEET_CSV_URL);
+        const text = await res.text();
+        const rows = text.trim().split("\n");
+        const headers = rows[0]
+          .split(",")
+          .map((h) => h.trim().replace(/"/g, "").toLowerCase());
+        const get = (cols, key) =>
+          (cols[headers.indexOf(key)] || "").trim().replace(/"/g, "");
+
+        return rows
+          .slice(1)
+          .map((row) => {
+            const cols = row.split(",");
+            return {
+              name: get(cols, "name"),
+              title: get(cols, "title"),
+              type: get(cols, "type").toUpperCase(),
+              total: parseFloat(get(cols, "total")) || 0,
+              relationship: get(cols, "relationship"),
+              suspicious_group: parseFloat(get(cols, "suspicious_group")) || 0,
+              compulsion: parseFloat(get(cols, "compulsion")) || 0,
+            };
+          })
+          .filter((p) => p.name.length > 0);
+      }
+
+      // URL 파라미터
+      const params = new URLSearchParams(window.location.search);
+      const targetName = params.get("name");
+
+      // ================================================================
+      // 상단 공 그래픽 (정적 — 중앙에 크게)
+      // ================================================================
+      async function drawMainBall(person) {
+        const canvas = document.getElementById("ballCanvas");
+        const ctx = canvas.getContext("2d");
+        const cx = canvas.width / 2;
+        const cy = canvas.height / 2;
+        const r = 80;
+
+        const imgSrc = pickImage(person.type);
+        const img = await loadImg(imgSrc);
+        const color = pickColor(person.sev);
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // 그림자 효과
+        ctx.save();
+        ctx.shadowColor = "rgba(0,0,0,0.2)";
+        ctx.shadowBlur = 20;
+        ctx.shadowOffsetY = 8;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.restore();
+
+        if (img) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(cx, cy, r, 0, Math.PI * 2);
+          ctx.clip();
+          ctx.drawImage(img, cx - r, cy - r, r * 2, r * 2);
+          ctx.restore();
+        } else {
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(cx, cy, r, 0, Math.PI * 2);
+          ctx.fillStyle = color;
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+
+      // ================================================================
+      // 하단 캔버스 — witH otHer cHArActers
+      // (처음부터 자기 자리에서 움직임, 하늘에서 내려오지 않음)
+      // ================================================================
+      let othBalls = [];
+      let othW, othH, othRaf;
+      let othCanvas, othCtx;
+
+      function computeSpeedFromY_oth(y, totalH) {
+        const topY = 100;
+        const botY = totalH - 100;
+        const frac = Math.max(0, Math.min(1, (y - topY) / (botY - topY)));
+        return 1 + frac * frac * 9.5;
+      }
+
+      function makeMiniBall(person) {
+        const sev = Math.min(5, Math.max(1, Math.ceil(person.total / 20)));
+        const color = pickColor(sev);
+        const r = 44 + Math.random() * 18;
+
+        // total에 따른 Y 위치
+        const padding = r + 20;
+        const targetY = padding + (person.total / 100) * (othH - padding * 2);
+
+        const waves = Array.from({ length: 3 }, () => ({
+          amp: 25 + Math.random() * 40,
+          freq: 0.003 + Math.random() * 0.012,
+          phase: Math.random() * Math.PI * 2,
+        }));
+
+        return {
+          name: person.name,
+          total: person.total,
+          type: person.type,
+          imageSrc: pickImage(person.type),
+          color,
+          r,
+          targetY,
+          x: r + Math.random() * (othW - r * 2),
+          y: targetY, // ← 처음부터 자기 자리
+          vx: (Math.random() < 0.5 ? 1 : -1) * (2 + Math.random() * 3),
+          vy: 0,
+          tick: Math.random() * 1000,
+          waves,
+        };
+      }
+
+      function drawMiniball(b) {
+        othCtx.save();
+        othCtx.translate(b.x, b.y);
+
+        // 그림자
+        othCtx.shadowColor = "rgba(0,0,0,0.15)";
+        othCtx.shadowBlur = 12;
+        othCtx.shadowOffsetY = 5;
+
+        const img = LOADED_IMAGES[b.imageSrc];
+        if (img) {
+          othCtx.beginPath();
+          othCtx.arc(0, 0, b.r, 0, Math.PI * 2);
+          othCtx.clip();
+          othCtx.drawImage(img, -b.r, -b.r, b.r * 2, b.r * 2);
+        } else {
+          othCtx.beginPath();
+          othCtx.arc(0, 0, b.r, 0, Math.PI * 2);
+          othCtx.fillStyle = b.color;
+          othCtx.fill();
+        }
+        othCtx.restore();
+      }
+
+      function updateMiniball(b) {
+        b.tick += 1;
+
+        // 좌우 이동
+        b.x += b.vx;
+        if (b.x - b.r < 0) {
+          b.x = b.r;
+          b.vx = Math.abs(b.vx) * 0.92;
+        }
+        if (b.x + b.r > othW) {
+          b.x = othW - b.r;
+          b.vx = -Math.abs(b.vx) * 0.92;
+        }
+
+        // 속도 보정
+        const liveSpd =
+          computeSpeedFromY_oth(b.y, othH) * (0.4 + (b.total / 100) * 1.4);
+        const curSpd = Math.abs(b.vx);
+        b.vx += (b.vx > 0 ? 1 : -1) * (liveSpd - curSpd) * 0.04;
+
+        // Y 드리프트 (사인파)
+        let yOff = 0;
+        for (const w of b.waves)
+          yOff += Math.sin(b.tick * w.freq + w.phase) * w.amp;
+        const targetY_now = b.targetY + yOff;
+        b.y += (targetY_now - b.y) * 0.08;
+      }
+
+      function othLoop() {
+        othCtx.clearRect(0, 0, othW, othH);
+        for (const b of othBalls) drawMiniball(b);
+        for (const b of othBalls) updateMiniball(b);
+        othRaf = requestAnimationFrame(othLoop);
+      }
+
+      function startOthers(people) {
+        othCanvas = document.getElementById("othersCanvas");
+        othCtx = othCanvas.getContext("2d");
+
+        othW = window.innerWidth;
+        // 공 수에 따라 높이 결정 (최소 300px)
+        othH = Math.max(300, Math.ceil(people.length / 3) * 220);
+
+        othCanvas.width = othW;
+        othCanvas.height = othH;
+        othCanvas.style.height = othH + "px";
+
+        // 이미지 로드 후 공 생성
+        const srcs = [...new Set(people.map((p) => pickImage(p.type)))];
+        let loaded = 0;
+        const tryStart = () => {
+          loaded++;
+          if (loaded >= srcs.length) {
+            othBalls = people.map((p) => makeMiniball(p));
+            othLoop();
+          }
+        };
+        if (srcs.length === 0) {
+          othBalls = people.map((p) => makeMiniball(p));
+          othLoop();
+          return;
+        }
+        srcs.forEach((src) => loadImg(src).then(tryStart));
+
+        window.addEventListener("resize", () => {
+          othW = window.innerWidth;
+          othCanvas.width = othW;
+          othBalls.forEach((b) => {
+            if (b.x > othW - b.r) b.x = othW - b.r;
+          });
+        });
+      }
+
+      // ================================================================
+      // 메인 init
+      // ================================================================
+      async function init() {
+        try {
+          const allPeople = await loadAllPeople();
+          document.getElementById("loading").style.display = "none";
+
+          // 메인 공 (NONE 아닌 것)
+          const person = allPeople.find(
+            (p) => p.name === targetName && p.type !== "NONE",
+          );
+          if (!person) {
+            document.getElementById("error").style.display = "block";
+            return;
+          }
+
+          person.sev = Math.min(5, Math.max(1, Math.ceil(person.total / 20)));
+
+          // ── 상단 정보 표시 ──
+          document.getElementById("person-name").textContent = person.name;
+          document.getElementById("person-title").textContent =
+            person.title || "";
+
+          // total 바
+          setTimeout(() => {
+            document.getElementById("total-bar").style.width =
+              `${person.total}%`;
+          }, 150);
+
+          // suspicious_group 바 (값 있을 때만)
+          if (person.suspicious_group > 0) {
+            document.getElementById("dd-label").style.display = "block";
+            document.getElementById("dd-bar-wrap").style.display = "block";
+            setTimeout(() => {
+              document.getElementById("dd-bar").style.width =
+                `${(person.suspicious_group / 5) * 100}%`;
+            }, 300);
+          }
+
+          // compulsion 바 (값 있을 때만)
+          if (person.compulsion > 0) {
+            document.getElementById("comp-label").style.display = "block";
+            document.getElementById("comp-bar-wrap").style.display = "block";
+            setTimeout(() => {
+              document.getElementById("comp-bar").style.width =
+                `${(person.compulsion / 5) * 100}%`;
+            }, 450);
+          }
+
+          document.getElementById("infoSection").style.display = "flex";
+
+          // 공 그래픽 그리기
+          await drawMainBall(person);
+
+          // ── witH otHer cHArActers ──
+          const noneMatches = allPeople.filter(
+            (p) => p.type === "NONE" && p.title === person.title,
+          );
+
+          // 메인 공은 항상 포함 — none 없어도 메인 공은 떠다님
+          const otherPeople = [person, ...noneMatches];
+
+          // 조건 제거 — 항상 표시
+          document.getElementById("othersSection").style.display = "block";
+
+          await Promise.all(allSrcs.map((src) => loadImg(src)));
+          startOthers(otherPeople);
+        } catch (err) {
+          document.getElementById("loading").style.display = "none";
+          document.getElementById("error").style.display = "block";
+          console.error("데이터 로드 실패:", err);
+        }
+      }
+
+      init();
+    </script>
+  </body>
+</html>

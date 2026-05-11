@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>D world — 혼합형</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cossette+Texte:wght@400;700&family=Roboto+Flex:opsz,wght@8..144,100..1000&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        overflow-x: hidden;
+        overflow-y: scroll;
+        min-height: 400vh;
+        background: linear-gradient(
+          180deg,
+          #f05 0.01%,
+          #d400ff 20.67%,
+          #0015ff 52.88%,
+          #00ffd0 76.44%,
+          #ffa600 96.15%
+        );
+        font-family: "Cossette Texte", sans-serif;
+        /* ← 스크롤해도 배경 고정 */
+      }
+
+      #wrap {
+        width: 100%;
+        height: 400vh;
+        position: relative;
+        overflow: visible;
+      }
+
+      #canvas {
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 2;
+        pointer-events: none;
+      }
+
+      .pageTitle {
+        position: absolute;
+        top: -1rem;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1;
+      }
+
+      /* .pageTitle img {
+        height: 80px;
+        width: auto;
+      } */
+
+      .backBtn {
+        position: fixed;
+        top: 2rem;
+        left: 2rem;
+        z-index: 100;
+        background: rgba(255, 255, 255, 0.5);
+        border: none;
+
+        font-family: "Cossette Texte", sans-serif;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: 0.2s ease;
+
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.4); /* 얇은 흰 테두리 */
+        box-shadow:
+          0 4px 24px rgba(0, 0, 0, 0.1),
+          /* 아래 그림자 */ inset 0 0.5px 0 rgba(255, 255, 255, 0.6); /* 상단 하이라이트 */
+        transition: 0.2s ease;
+
+        padding: 7px 24px;
+        border-radius: 16px;
+
+        white-space: nowrap;
+        width: auto; /* ← 자동 너비 */
+        min-width: unset; /* ← 최소 너비 제거 */
+        max-width: unset; /* ← 최대 너비 제거 */
+        box-sizing: border-box;
+      }
+      .backBtn:hover {
+        background: rgba(255, 255, 255, 0.8);
+        transform: scale(1.04);
+
+        box-shadow:
+          0 6px 30px rgba(0, 0, 0, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.7);
+      }
+
+      .sortBtn {
+        position: fixed;
+        bottom: 3rem;
+        right: 2rem;
+        z-index: 100;
+        background: rgba(255, 255, 255, 0.5);
+        border: none;
+
+        font-family: "Cossette Texte", sans-serif;
+        font-size: 1.1rem;
+        cursor: pointer;
+
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.4); /* 얇은 흰 테두리 */
+        box-shadow:
+          0 4px 24px rgba(0, 0, 0, 0.1),
+          /* 아래 그림자 */ inset 0 0.5px 0 rgba(255, 255, 255, 0.6); /* 상단 하이라이트 */
+        transition: 0.2s ease;
+
+        padding: 7px 24px;
+        border-radius: 16px;
+
+        white-space: nowrap;
+        width: auto; /* ← 자동 너비 */
+        min-width: unset; /* ← 최소 너비 제거 */
+        max-width: unset; /* ← 최대 너비 제거 */
+        box-sizing: border-box;
+      }
+      .sortBtn:hover {
+        background: rgba(255, 255, 255, 0.8);
+        transform: scale(1.04);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="wrap">
+      <canvas id="canvas"></canvas>
+
+      <button class="backBtn" onclick="location.href = 'index.html'">
+        ← bAck
+      </button>
+
+      <div class="pageTitle">
+        <img src="dworld.svg" alt="D world" />
+      </div>
+    </div>
+
+    <button class="sortBtn" id="sortBtn" onclick="sortBalls()">
+      Attention!
+    </button>
+
+    <script src="ball.js"></script>
+
+    <script>
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      const wrap = document.getElementById("wrap");
+      let W,
+        H,
+        balls = [],
+        raf;
+
+      async function init() {
+        resize();
+        let people = [];
+        if (USE_GOOGLE_SHEETS) {
+          try {
+            people = await loadFromGoogleSheets();
+            people = people.filter((p) => p.type === "D"); // 주의력 결핍형만
+          } catch (err) {
+            console.warn("Sheet load failed:", err);
+          }
+        }
+
+        preloadImages(() => {
+          balls = people.map((p) =>
+            makeBall(p, true, Math.floor(Math.random() * 90)),
+          );
+          if (raf) cancelAnimationFrame(raf);
+          loop();
+        });
+
+        // 공 클릭 → detail.html로 이동
+        canvas.style.pointerEvents = "auto";
+        canvas.addEventListener("click", (e) => {
+          const rect = canvas.getBoundingClientRect();
+          const mx = e.clientX - rect.left;
+          const my = e.clientY - rect.top + window.scrollY; // 스크롤 보정
+
+          for (const b of balls) {
+            if (!b.active) continue;
+            const dx = mx - b.x;
+            const dy = my - b.y;
+            if (Math.sqrt(dx * dx + dy * dy) <= b.r) {
+              window.location.href = `detail.html?name=${encodeURIComponent(b.name)}`;
+              break;
+            }
+          }
+        });
+      }
+
+      window.addEventListener("resize", resize);
+      init();
+
+      let isSorted = false;
+
+      function sortBalls() {
+        if (isSorted) {
+          isSorted = false;
+          document.getElementById("sortBtn").textContent = "Attention!";
+
+          // 순간이동 대신 → 튕기며 원래 자리로
+          balls.forEach((b) => {
+            b.sorting = true; // 아직 정렬 모드 유지
+            b.sortStarted = false;
+            b.sortDropping = true; // 바로 이탈 모드로
+            b.sortTick = 0;
+            b.bounceCount = 0;
+            b.restitution = 0.78;
+
+            b.sortTargetY = b.targetY;
+
+            // 원래 자리가 위인지 아래인지 판단
+            const goingUp = b.targetY < b.y;
+            b.vx = (Math.random() < 0.5 ? 1 : -1) * (2 + (b.total / 100) * 5);
+            b.vy = goingUp
+              ? -(2 + (b.total / 100) * 4) // 위로
+              : 0; // 아래는 중력이 가속
+          });
+          return;
+        }
+
+        isSorted = true;
+        document.getElementById("sortBtn").textContent = "At eAse";
+
+        const sorted = [...balls].sort((a, b) => b.total - a.total);
+        const r = balls[0]?.r || 50;
+        const GAP = 100;
+        const cols = Math.max(2, Math.floor(W / (r * 2 + GAP)));
+        const spacingX = W / (cols + 1);
+        const spacingY = r * 2 + 40;
+        const startY = window.scrollY + r + 80;
+
+        sorted.forEach((b, i) => {
+          const col = (i % cols) + 1;
+          const row = Math.floor(i / cols);
+          b.sortTargetX = spacingX * col;
+          b.sortTargetY = startY + spacingY * row;
+          b.sorting = true;
+          b.sortStarted = false;
+          b.sortDropping = false;
+          b.sortTick = 0;
+          b.bounceCount = 0;
+          b.restitution = 0.78;
+
+          // 각 공마다 완전히 다른 개인 위상 (성격)
+          b.personalPhase = Math.random() * Math.PI * 2;
+        });
+
+        sorted.forEach((b) => {
+          // 꼼지락 시작 타이밍:
+          // total 100 → 3초 후 바로 / total 0 → 최대 6초 후
+          // + 개인차 랜덤 ±0.5초 추가 (같은 total이어도 조금씩 다름)
+          const personalVariation = (Math.random() - 0.5) * 1000;
+          const fidgetDelay =
+            3000 + (1 - b.total / 100) * 3000 + personalVariation;
+
+          setTimeout(() => {
+            if (b.sorting) b.sortStarted = true;
+          }, fidgetDelay);
+
+          // 이탈(낙하) 타이밍:
+          // 꼼지락 시작 후 → total 높을수록 짧게 꼼지락하다 빨리 이탈
+          // total 100 → 꼼지락 0.8초 후 이탈 / total 0 → 꼼지락 3초 후 이탈
+          const dropDelay =
+            (1 - b.total / 100) * 3000 + 800 + (Math.random() - 0.5) * 500; // ±0.25초 개인차
+
+          setTimeout(() => {
+            if (b.sorting && b.sortStarted) {
+              // total 50 이하 → 이탈 안 함, 제자리에서 계속 꼼지락
+              if (b.total <= 30) {
+                // sortDropping으로 넘어가지 않음
+                // sortStarted는 true 상태 유지 → 정렬 모드 2 계속 실행
+                return;
+              }
+
+              // total 50 초과 → 이탈
+              b.sortDropping = true;
+              b.vx = (Math.random() < 0.5 ? 1 : -1) * (2 + (b.total / 100) * 5);
+              const goingUp = b.targetY < b.y;
+              b.vy = goingUp ? -(2 + (b.total / 100) * 4) : 0;
+            }
+          }, fidgetDelay + dropDelay);
+        });
+      }
+    </script>
+  </body>
+</html>

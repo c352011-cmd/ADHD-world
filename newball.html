@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mAke your bAll</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cossette+Texte:wght@400;700&family=Roboto+Flex:opsz,wght@8..144,100..1000&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        overflow-x: hidden;
+        overflow-y: scroll;
+        min-height: 100vh;
+        background: linear-gradient(
+          180deg,
+          #f05 0.01%,
+          #d400ff 20.67%,
+          #0015ff 52.88%,
+          #00ffd0 76.44%,
+          #ffa600 96.15%
+        );
+        font-family: "Cossette Texte", sans-serif;
+        padding-bottom: 160px;
+      }
+
+      /* 뒤로가기 */
+      .backBtn {
+        position: fixed;
+        top: 2rem;
+        left: 2rem;
+        z-index: 100;
+        background: rgba(255, 255, 255, 0.5);
+        border: none;
+
+        font-family: "Cossette Texte", sans-serif;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: 0.2s ease;
+
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.4); /* 얇은 흰 테두리 */
+        box-shadow:
+          0 4px 24px rgba(0, 0, 0, 0.1),
+          /* 아래 그림자 */ inset 0 0.5px 0 rgba(255, 255, 255, 0.6); /* 상단 하이라이트 */
+        transition: 0.2s ease;
+
+        padding: 7px 24px;
+        border-radius: 16px;
+
+        white-space: nowrap;
+        width: auto; /* ← 자동 너비 */
+        min-width: unset; /* ← 최소 너비 제거 */
+        max-width: unset; /* ← 최대 너비 제거 */
+        box-sizing: border-box;
+      }
+      .backBtn:hover {
+        background: rgba(255, 255, 255, 0.8);
+        transform: scale(1.04);
+
+        box-shadow:
+          0 6px 30px rgba(0, 0, 0, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.7);
+      }
+
+      /* 상단 타이틀 */
+      .page-title {
+        text-align: center;
+        padding-top: 2.2rem;
+        font-size: 1.1rem;
+        letter-spacing: 3px;
+        color: rgba(0, 0, 0, 0.45);
+        margin-bottom: 28px;
+        letter-spacing: 1.3px;
+        font-weight: 500;
+      }
+
+      /* 전체 컨텐츠 래퍼 */
+      .content {
+        max-width: 680px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+
+      /* iD 블록 */
+      .id-block {
+        text-align: center;
+        margin-bottom: 28px;
+      }
+
+      .id-label {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+        color: rgba(0, 0, 0, 0.55);
+        letter-spacing: 2px;
+      }
+
+      .id-input {
+        width: 100%;
+        max-width: 380px;
+        padding: 14px 20px;
+        border-radius: 16px;
+        border: none;
+        background: rgba(255, 255, 255, 0.5);
+        font-family: "Cossette Texte", sans-serif;
+        font-size: 1.1rem;
+        outline: none;
+        color: #222;
+        transition: background 0.2s;
+      }
+      .id-input:focus {
+        background: rgba(255, 255, 255, 0.8);
+      }
+      .id-input::placeholder {
+        text-align: center;
+        color: rgba(0, 0, 0, 0.28);
+      }
+
+      /* 에러 메시지 */
+      .error-msg {
+        text-align: center;
+        color: #ffffff;
+        font-size: 0.9rem;
+        margin-top: 8px;
+        min-height: 20px;
+      }
+
+      /* 설명 텍스트 */
+      .subtitle {
+        text-align: center;
+        font-size: 1rem;
+        color: rgba(0, 0, 0, 0.45);
+        margin-bottom: 16px;
+        letter-spacing: 1px;
+      }
+
+      /* 체크리스트 카드 */
+      .checklist-card {
+        background: rgba(200, 220, 255, 0.35);
+        border-radius: 28px;
+        border: none;
+        padding: 8px 20px 20px;
+      }
+
+      /* 각 항목 */
+      .check-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 15px 8px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+        cursor: pointer;
+      }
+      .check-item:last-child {
+        border-bottom: none;
+      }
+
+      /* 체크박스 숨기기 */
+      .check-item input[type="checkbox"] {
+        display: none;
+      }
+
+      /* 커스텀 체크박스 */
+      .custom-check {
+        width: 22px;
+        height: 22px;
+        border-radius: 7px;
+
+        background: rgba(255, 255, 255, 0.6);
+        flex-shrink: 0;
+        margin-top: 2px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s;
+      }
+
+      .check-item input:checked + .custom-check {
+        background: rgba(255, 255, 255, 0.7);
+        border-color: rgba(255, 255, 255, 0.7);
+      }
+
+      /* 체크마크 */
+      .check-item input:checked + .custom-check::after {
+        content: "";
+        display: block;
+        width: 5px;
+        height: 10px;
+        border: 2.5px solid #000000;
+        border-top: none;
+        border-left: none;
+        transform: rotate(45deg) translate(-1px, -1px);
+      }
+
+      .check-label {
+        font-size: 0.98rem;
+        color: rgba(0, 0, 0, 0.72);
+        line-height: 1.55;
+        flex: 1;
+        user-select: none;
+      }
+
+      /* 선택된 항목 강조 */
+      .check-item:has(input:checked) .check-label {
+        color: red;
+      }
+
+      /* tHrow it! 버튼 */
+      .throwBtn {
+        position: fixed;
+        bottom: 3rem;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 100;
+        background: rgba(255, 255, 255, 0.6);
+        /* border: none; */
+        font-family: "Cossette Texte", sans-serif;
+        font-size: 1.3rem;
+        cursor: pointer;
+        transition: 0.2s ease;
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
+
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.4); /* 얇은 흰 테두리 */
+        box-shadow:
+          0 4px 24px rgba(0, 0, 0, 0.1),
+          /* 아래 그림자 */ inset 0 0.5px 0 rgba(255, 255, 255, 0.6); /* 상단 하이라이트 */
+        transition: 0.2s ease;
+
+        padding: 7px 24px;
+        border-radius: 16px;
+
+        white-space: nowrap;
+        width: auto; /* ← 자동 너비 */
+        min-width: unset; /* ← 최소 너비 제거 */
+        max-width: unset; /* ← 최대 너비 제거 */
+        box-sizing: border-box;
+      }
+      .throwBtn:hover {
+        background: rgba(255, 255, 255, 0.9);
+        transform: translateX(-50%) scale(1.04);
+
+        box-shadow:
+          0 6px 30px rgba(0, 0, 0, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.7);
+      }
+      .throwBtn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: translateX(-50%);
+      }
+
+      /* 완료 오버레이 */
+      .done-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 200;
+      }
+      .done-overlay.show {
+        display: flex;
+      }
+
+      .done-box {
+        background: rgba(255, 255, 255, 0.92);
+        border-radius: 24px;
+        padding: 44px 52px;
+        text-align: center;
+        max-width: 340px;
+      }
+      .done-box .done-emoji {
+        font-size: 3rem;
+        margin-bottom: 12px;
+      }
+      .done-box .done-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #111;
+        margin-bottom: 8px;
+      }
+      .done-box .done-sub {
+        font-size: 0.95rem;
+        color: #555;
+      }
+    </style>
+  </head>
+
+  <body>
+    <button class="backBtn" onclick="history.back()">← back</button>
+
+    <div class="page-title">mAke your bAll</div>
+
+    <div class="content">
+      <!-- iD 입력 블록 -->
+      <div class="id-block">
+        <div class="id-label">iD</div>
+        <input
+          type="text"
+          class="id-input"
+          id="idInput"
+          placeholder="enter your name or nickname"
+          maxlength="30"
+        />
+        <div class="error-msg" id="errorMsg"></div>
+      </div>
+
+      <!-- 안내 문구 -->
+      <div class="subtitle">follow tHe question below:</div>
+
+      <!-- 체크리스트 카드 -->
+      <div class="checklist-card">
+        <!-- H 유형 (충동형) — 유형 표시 없음 -->
+        <label class="check-item">
+          <input type="checkbox" class="q-check" data-type="H" />
+          <span class="custom-check"></span>
+          <span class="check-label"
+            >DoEs it often wiggle or move tHeir HAnDs or feet?</span
+          >
+        </label>
+
+        <label class="check-item">
+          <input type="checkbox" class="q-check" data-type="H" />
+          <span class="custom-check"></span>
+          <span class="check-label"
+            >DoEs it Have a Difficulty in stAying still?</span
+          >
+        </label>
+
+        <label class="check-item">
+          <input type="checkbox" class="q-check" data-type="H" />
+          <span class="custom-check"></span>
+          <span class="check-label">DoEs it move constAntly?</span>
+        </label>
+
+        <label class="check-item">
+          <input type="checkbox" class="q-check" data-type="H" />
+          <span class="custom-check"></span>
+          <span class="check-label">Does it often tAlk excessively?</span>
+        </label>
+
+        <label class="check-item">
+          <input type="checkbox" class="q-check" data-type="H" />
+          <span class="custom-check"></span>
+          <span class="check-label"
+            >Does it often interrupt or intrude on otHers?</span
+          >
+        </label>
+
+        <!-- A 유형 (주의력 결핍형) -->
+        <label class="check-item">
+          <input type="checkbox" class="q-check" data-type="A" />
+          <span class="custom-check"></span>
+          <span class="check-label"
+            >Does it often fAils to give close Attention to DetAils or mAkes
+            cAreless mistAkes in DAily life?</span
+          >
+        </label>
+
+        <label class="check-item">
+          <input type="checkbox" class="q-check" data-type="A" />
+          <span class="custom-check"></span>
+          <span class="check-label"
+            >Does it often forgetful in DAily Activities?</span
+          >
+        </label>
+
+        <label class="check-item">
+          <input type="checkbox" class="q-check" data-type="A" />
+          <span class="custom-check"></span>
+          <span class="check-label">Does it eAsily be DistrActed?</span>
+        </label>
+
+        <label class="check-item">
+          <input type="checkbox" class="q-check" data-type="A" />
+          <span class="custom-check"></span>
+          <span class="check-label"
+            >Does it forget other importAnt work And time concepts due to
+            excessive concentrAtion?</span
+          >
+        </label>
+
+        <!-- D 유형 (의심군) -->
+        <label class="check-item">
+          <input type="checkbox" class="q-check" data-type="DD" />
+          <span class="custom-check"></span>
+          <span class="check-label">Does it chronicAlly lAte?</span>
+        </label>
+
+        <label class="check-item">
+          <input type="checkbox" class="q-check" data-type="DD" />
+          <span class="custom-check"></span>
+          <span class="check-label">Does it get bored eAsily?</span>
+        </label>
+
+        <label class="check-item">
+          <input type="checkbox" class="q-check" data-type="DD" />
+          <span class="custom-check"></span>
+          <span class="check-label"
+            >Does it do mAny tHings At tHe sAme time?</span
+          >
+        </label>
+
+        <label class="check-item">
+          <input type="checkbox" class="q-check" data-type="DD" />
+          <span class="custom-check"></span>
+          <span class="check-label"
+            >Does it HAve A lot of ups And downs And impAtience?</span
+          >
+        </label>
+
+        <label class="check-item">
+          <input type="checkbox" class="q-check" data-type="DD" />
+          <span class="custom-check"></span>
+          <span class="check-label"
+            >Does it HAve low self-esteem And sense of AccomplisHment?</span
+          >
+        </label>
+      </div>
+    </div>
+
+    <!-- tHrow it! 버튼 -->
+    <button class="throwBtn" id="throwBtn" onclick="throwBall()">
+      tHrow it !
+    </button>
+
+    <!-- 완료 오버레이 -->
+    <div class="done-overlay" id="doneOverlay">
+      <div class="done-box">
+        <div class="done-emoji">🟣</div>
+        <div class="done-title" id="doneTitle">공이 생성됐어요!</div>
+        <div class="done-sub" id="doneSub">잠시 후 이동합니다...</div>
+      </div>
+    </div>
+
+    <script>
+      // ================================================================
+      // ⚠️ Apps Script 웹앱 URL을 여기에 입력하세요
+      // (아래 "Apps Script 설정 방법" 참고)
+      // ================================================================
+      const APPS_SCRIPT_URL =
+        "https://script.google.com/macros/s/AKfycbyYadVBlD9UsV3iOB_D1vRPqt7v36s6TMOKehaSCA0P3jM3KvZvAZuu9_oaeBE7vSGnoA/exec";
+
+      const TOTAL_Q = 14;
+
+      function judgeType(cH, cA, cdd) {
+        if (cA >= 2 && cH >= 2) return "D";
+        if (cH >= 4) return "H";
+        if (cA >= 4) return "A";
+        if (cdd >= 4) return "DD";
+        const max = Math.max(cH, cA, cdd);
+        if (max === 0) return null;
+        if (max === cH) return "H";
+        if (max === cA) return "A";
+        return "DD";
+      }
+
+      async function throwBall() {
+        const idVal = document.getElementById("idInput").value.trim();
+        const errEl = document.getElementById("errorMsg");
+
+        if (!idVal) {
+          errEl.textContent = "write your iD";
+          document.getElementById("idInput").focus();
+          return;
+        }
+        errEl.textContent = "";
+
+        const checks = document.querySelectorAll(".q-check");
+        let cH = 0,
+          cA = 0,
+          cdd = 0,
+          totalChecked = 0; // ← cdd로 통일
+
+        checks.forEach((cb) => {
+          if (cb.checked) {
+            totalChecked++;
+            if (cb.dataset.type === "H") cH++;
+            if (cb.dataset.type === "A") cA++;
+            if (cb.dataset.type === "DD") cdd++; // ← dd로 통일
+          }
+        });
+
+        const type = judgeType(cH, cA, cdd); // ← 3개 인자
+        const totalPct = Math.round((totalChecked / TOTAL_Q) * 100);
+
+        const btn = document.getElementById("throwBtn");
+        btn.disabled = true;
+        btn.textContent = "sending...";
+
+        try {
+          const payload = {
+            name: idVal,
+            type: type || "DD",
+            total: totalPct,
+            compulsion: cH,
+            distraction: cA,
+            suspicious_group: cdd,
+          };
+
+          await fetch(APPS_SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+        } catch (err) {
+          console.warn("시트 저장 실패:", err);
+        }
+
+        const typeLabel = {
+          A: "주의력 결핍형",
+          H: "충동형",
+          D: "혼합형", // ← 콤마 추가
+          DD: "의심군",
+        };
+
+        document.getElementById("doneTitle").textContent =
+          `${typeLabel[type || "dd"]} 공이 생성됐어요!`;
+        document.getElementById("doneSub").textContent =
+          `total: ${totalPct}% · 3초 후 이동합니다`;
+
+        document.getElementById("doneOverlay").classList.add("show");
+
+        // newball.html의 setTimeout 부분:
+        setTimeout(() => {
+          window.location.href = `index.html?newball=${encodeURIComponent(idVal)}&type=${type || "dd"}&total=${totalPct}`;
+        }, 15000);
+      }
+    </script>
+  </body>
+</html>

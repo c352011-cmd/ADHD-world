@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ADHD world</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cossette+Texte:wght@400;700&family=Roboto+Flex:opsz,wght@8..144,100..1000&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        overflow-x: hidden;
+        overflow-y: scroll;
+        min-height: 400vh;
+        background: linear-gradient(
+          180deg,
+          #f05 0.01%,
+          #d400ff 20.67%,
+          #0015ff 52.88%,
+          #00ffd0 76.44%,
+          #ffa600 96.15%
+        );
+        font-family: "Cossette Texte", sans-serif;
+
+        /* background-attachment: fixed; ← 스크롤해도 배경 고정 */
+        font-family: "Cossette Texte", sans-serif;
+      }
+
+      /* 전체 스크롤 영역 */
+      #wrap {
+        width: 100%;
+        height: 400vh;
+        position: relative;
+        overflow: visible;
+      }
+
+      /* 캔버스 — 페이지 전체를 덮음 */
+      #canvas {
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 2;
+        pointer-events: none; /* 캔버스 아래 버튼 클릭 가능 */
+      }
+
+      /* 타이틀 버튼 영역 */
+      .bigButton {
+        position: absolute;
+        top: -1rem;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1;
+        display: flex;
+        gap: 12px;
+        align-items: flex-end;
+        justify-content: center;
+      }
+
+      .worldButton:hover .title-text {
+        fill: #00ff40;
+      }
+
+      /* .worldButton:hover .title-text-dd {
+        fill: #ff0d00;
+      } */
+
+      /* .title-text-dd {
+        display: inline-flex;
+        padding-top: 90px;
+        flex-direction: column;
+        justify-content: flex-end;
+        align-items: center;
+      } */
+
+      .worldButton {
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        padding: 0;
+      }
+
+      /* tHrow your bAll 버튼 */
+      .makeB {
+        position: fixed;
+        bottom: 3rem;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 100;
+        display: flex;
+
+        justify-content: center;
+        align-items: center;
+
+        background: rgba(255, 255, 255, 0.5);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        border: none;
+        font-family: "Cossette Texte", sans-serif;
+        font-size: 1.3rem;
+        cursor: pointer;
+
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.4); /* 얇은 흰 테두리 */
+        box-shadow:
+          0 4px 24px rgba(0, 0, 0, 0.1),
+          /* 아래 그림자 */ inset 0 0.5px 0 rgba(255, 255, 255, 0.6); /* 상단 하이라이트 */
+        transition: 0.2s ease;
+
+        padding: 7px 24px;
+        border-radius: 16px;
+
+        white-space: nowrap;
+        width: auto; /* ← 자동 너비 */
+        min-width: unset; /* ← 최소 너비 제거 */
+        max-width: unset; /* ← 최대 너비 제거 */
+        box-sizing: border-box;
+      }
+
+      .makeB:hover {
+        background: rgba(255, 255, 255, 0.8);
+        transform: translateX(-50%) scale(1.04);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="wrap">
+      <canvas id="canvas"></canvas>
+
+      <!-- 타이틀 버튼 (A D H D world) -->
+      <div class="bigButton">
+        <button
+          class="worldButton"
+          type="button"
+          onclick="location.href = 'A.html'"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="175"
+            height="570"
+            viewBox="0 0 175 570"
+            fill="none"
+          >
+            <path
+              class="title-text"
+              class="title-text"
+              d="M56.8733 345.661H117.456L87.0408 107.384L56.8733 345.661ZM127.099 421.723H47.2295L28.4366 569.191H0L74.4298 -5.15665H102.619L174.329 568.415H145.892L127.099 421.723Z"
+              fill="black"
+            />
+          </svg>
+        </button>
+        <button
+          class="worldButton"
+          type="button"
+          onclick="location.href = 'D.html'"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="142"
+            height="569"
+            viewBox="0 0 142 569"
+            fill="none"
+          >
+            <path
+              class="title-text"
+              d="M141.441 280.465C141.441 446.56 112.51 568.415 56.1314 568.415H0V-5.93286H56.1314C113.499 -5.93286 141.441 110.489 141.441 280.465ZM114.488 280.465C114.488 195.089 104.845 69.3532 57.8624 69.3532H26.953V493.129H57.8624C104.35 493.129 114.488 364.288 114.488 280.465Z"
+              fill="black"
+            />
+          </svg>
+        </button>
+        <button
+          class="worldButton"
+          type="button"
+          onclick="location.href = 'H.html'"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="139"
+            height="569"
+            viewBox="0 0 139 569"
+            fill="none"
+          >
+            <path
+              class="title-text"
+              d="M138.474 568.415H111.521V313.063H26.953V568.415H0V-5.15665H26.953V237.001H111.521V-5.15665H138.474V568.415Z"
+              fill="black"
+            />
+          </svg>
+        </button>
+        <button
+          class="worldButton"
+          type="button"
+          onclick="location.href = 'dd.html'"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="142"
+            height="487"
+            viewBox="0 0 142 487"
+            fill="none"
+          >
+            <path
+              class="title-text"
+              d="M-2.58594 300.167C-2.58594 261.345 0.225456 228.127 5.84824 200.511C11.471 172.496 19.102 151.084 28.741 136.276C38.3801 121.467 49.3579 114.063 61.6745 114.063C72.6523 114.063 82.0236 119.666 89.7884 130.873C97.821 141.679 103.845 156.087 107.862 174.097H109.87V0H142V480.266H109.87V426.236H107.862C103.845 444.246 97.821 458.855 89.7884 470.061C82.0236 480.867 72.6523 486.27 61.6745 486.27C49.3579 486.27 38.3801 478.866 28.741 464.057C19.102 449.249 11.471 428.037 5.84824 400.422C0.225456 372.407 -2.58594 338.988 -2.58594 300.167ZM111.878 300.167C111.878 259.744 108.129 228.127 100.632 205.314C93.4031 182.501 83.0946 171.095 69.707 171.095C56.5872 171.095 46.2788 182.501 38.7817 205.314C31.2847 228.127 27.5361 259.744 27.5361 300.167C27.5361 340.189 31.2847 371.806 38.7817 395.019C46.2788 417.832 56.5872 429.238 69.707 429.238C83.0946 429.238 93.4031 417.832 100.632 395.019C108.129 371.806 111.878 340.189 111.878 300.167Z"
+              fill="black"
+            />
+          </svg>
+        </button>
+        <button class="worldButton" type="button">
+          <img src="world.svg" alt="world" />
+        </button>
+      </div>
+
+      <!-- tHrow your bAll 버튼 -->
+      <button
+        type="button"
+        class="makeB"
+        onclick="location.href = 'newball.html'"
+      >
+        tHrow your bAll
+      </button>
+    </div>
+
+    <!-- 1. 공통 함수 로드 -->
+    <script src="ball.js"></script>
+
+    <!-- 2. 이 페이지만의 코드 -->
+    <script>
+      // 캔버스 & 컨텍스트 설정
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      const wrap = document.getElementById("wrap");
+      let W,
+        H,
+        balls = [],
+        raf;
+
+      // 초기화 & 시트 데이터 로드
+      async function init() {
+        resize();
+        let people = [];
+        if (USE_GOOGLE_SHEETS) {
+          try {
+            people = await loadFromGoogleSheets();
+            people = people.filter((p) => p.type !== "NONE");
+          } catch (err) {
+            console.warn("Sheet load failed:", err);
+          }
+        }
+
+        preloadImages(() => {
+          balls = people.map((p) =>
+            makeBall(p, true, Math.floor(Math.random() * 90)),
+          );
+          if (raf) cancelAnimationFrame(raf);
+          loop();
+        });
+      }
+
+      // 클릭 이벤트는 init() 완전히 밖에, window에 등록
+      window.addEventListener("click", (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top + window.scrollY;
+
+        for (const b of balls) {
+          if (!b.active) continue;
+          const dx = mx - b.x;
+          const dy = my - b.y;
+          if (Math.sqrt(dx * dx + dy * dy) <= b.r) {
+            window.location.href = `detail.html?name=${encodeURIComponent(b.name)}`;
+            break;
+          }
+        }
+      });
+
+      window.addEventListener("resize", resize);
+      init();
+      // 새로 생성된 공 빛 테두리 효과
+      const urlParams = new URLSearchParams(window.location.search);
+      const newBallName = urlParams.get("newball");
+
+      if (newBallName) {
+        let found = false;
+
+        const glowInterval = setInterval(() => {
+          const target = balls.find((b) => b.name === newBallName);
+          if (target) {
+            found = true;
+            clearInterval(glowInterval);
+            target.glowing = true;
+            setTimeout(() => {
+              target.glowing = false;
+            }, 3000);
+          }
+        }, 300);
+
+        // 5초 후에도 못 찾으면 — 임시 공을 직접 만들어서 glow 표시
+        setTimeout(() => {
+          if (!found) {
+            clearInterval(glowInterval);
+
+            // URL 파라미터에서 type도 받아오거나 기본값 사용
+            const tempPerson = {
+              name: newBallName,
+              total: 50,
+              type: "A",
+              sev: 3,
+            };
+
+            const tempBall = makeBall(tempPerson, true, 0);
+            tempBall.glowing = true;
+            balls.push(tempBall);
+
+            setTimeout(() => {
+              tempBall.glowing = false;
+            }, 3000);
+          }
+        }, 5000);
+      }
+    </script>
+  </body>
+</html>

@@ -385,8 +385,8 @@ function drawBall(b) {
 
     // 레이어 1 — 바깥 글로우
     const grd1 = ctx.createRadialGradient(0, 0, 0, 0, 0, b.r * 1.8);
-    grd1.addColorStop(0, `rgba(255,255,255,${0.8 + pulse * 0.3})`);
-    grd1.addColorStop(0.5, `rgba(255,255,255,${0.15 + pulse * 0.1})`);
+    grd1.addColorStop(0, `rgba(255,255,255,${7.0 + pulse * 0.7})`);
+    grd1.addColorStop(0.5, `rgba(255,255,255,${0.3 + pulse * 0.2})`);
     grd1.addColorStop(1, `rgba(255,255,255,0)`);
     ctx.beginPath();
     ctx.arc(0, 0, b.r * 3.5, 0, Math.PI * 2);

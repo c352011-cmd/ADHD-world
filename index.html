@@ -477,10 +477,7 @@
 
       window.addEventListener("click", (e) => {
         // 버튼, 링크, input 클릭이면 무시
-        if (
-          e.target.closest("button, a, input, .makeB, .bigButton, .searchBox")
-        )
-          return;
+        if (e.target.closest("button, a, input, .makeB,  .searchBox")) return;
 
         const rect = canvas.getBoundingClientRect();
         const mx = e.clientX - rect.left;
@@ -551,8 +548,8 @@
 
       const tooltip = document.getElementById("ballTooltip");
 
-      canvas.style.pointerEvents = "auto"; // index.html은 이게 없으니 추가
-      canvas.addEventListener("mousemove", (e) => {
+      canvas.style.pointerEvents = "none"; // index.html은 이게 없으니 추가
+      window.addEventListener("mousemove", (e) => {
         const mx = e.pageX; // ← clientX 대신 pageX
         const my = e.pageY; // ← clientY + scrollY 대신 pageY 바로 사용
 

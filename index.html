@@ -476,6 +476,12 @@
       }
 
       window.addEventListener("click", (e) => {
+        // 버튼, 링크, input 클릭이면 무시
+        if (
+          e.target.closest("button, a, input, .makeB, .bigButton, .searchBox")
+        )
+          return;
+
         const rect = canvas.getBoundingClientRect();
         const mx = e.clientX - rect.left;
         const my = e.clientY - rect.top + window.scrollY;

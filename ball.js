@@ -378,29 +378,22 @@ function drawBall(b) {
   if (b.glowing) {
     const pulse = Math.sin(Date.now() / 300) * 0.5 + 0.5;
     ctx.save();
-    const grd1 = ctx.createRadialGradient(0, 0, b.r, 0, 0, b.r * 3.5);
-    grd1.addColorStop(0, `rgba(255,255,255,${0.15 + pulse * 0.1})`);
+
+    // 블러 필터 적용 — 자연스럽게 번지는 빛
+    ctx.filter = `blur(${b.r * 0.15}px)`;
+    //                      ↑ 블러 강도 조절
+
+    // 레이어 1 — 바깥 글로우
+    const grd1 = ctx.createRadialGradient(0, 0, 0, 0, 0, b.r * 1.8);
+    grd1.addColorStop(0, `rgba(255,255,255,${0.8 + pulse * 0.3})`);
+    grd1.addColorStop(0.5, `rgba(255,255,255,${0.15 + pulse * 0.1})`);
     grd1.addColorStop(1, `rgba(255,255,255,0)`);
     ctx.beginPath();
     ctx.arc(0, 0, b.r * 3.5, 0, Math.PI * 2);
     ctx.fillStyle = grd1;
     ctx.fill();
 
-    const grd2 = ctx.createRadialGradient(0, 0, b.r, 0, 0, b.r * 2.2);
-    grd2.addColorStop(0, `rgba(255,255,255,${0.35 + pulse * 0.2})`);
-    grd2.addColorStop(1, `rgba(255,255,255,0)`);
-    ctx.beginPath();
-    ctx.arc(0, 0, b.r * 2.2, 0, Math.PI * 2);
-    ctx.fillStyle = grd2;
-    ctx.fill();
-
-    const grd3 = ctx.createRadialGradient(0, 0, b.r * 0.9, 0, 0, b.r * 1.4);
-    grd3.addColorStop(0, `rgba(255,255,255,${0.6 + pulse * 0.4})`);
-    grd3.addColorStop(1, `rgba(255,255,255,0)`);
-    ctx.beginPath();
-    ctx.arc(0, 0, b.r * 1.4, 0, Math.PI * 2);
-    ctx.fillStyle = grd3;
-    ctx.fill();
+    ctx.filter = "none"; // ← 블러 해제 (이후 이미지에 영향 안 가도록)
     ctx.restore();
   }
 

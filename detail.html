@@ -557,19 +557,11 @@ if (img) {
         othCtx.shadowOffsetY = 5;
 
         const img = LOADED_IMAGES[b.imageSrc];
-        if (img) {
-          othCtx.beginPath();
-          othCtx.arc(0, 0, b.r, 0, Math.PI * 2);
-          othCtx.clip();
-          othCtx.drawImage(img, -b.r, -b.r, b.r * 2, b.r * 2);
-        } else {
-          othCtx.beginPath();
-          othCtx.arc(0, 0, b.r, 0, Math.PI * 2);
-          othCtx.fillStyle = b.color;
-          othCtx.fill();
-        }
-        othCtx.restore();
-      }
+         const offscreen  = document.createElement("canvas");
+    const size       = b.r * 2;
+    offscreen.width  = size;
+    offscreen.height = size;
+    const offCtx     = offscreen.getContext("2d");}
 
       function updateMiniBall(b) {
         b.tick += 1;

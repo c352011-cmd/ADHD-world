@@ -584,7 +584,7 @@ function updateBall(b) {
     // ── patrol 모드 (settled) ──
   } else {
     // X 이동 — total에 따라 속도 차이 크게
-    const liveSpd = 0.5 + (b.total / 100) * 12.0; // ← 그대로 유지
+    const liveSpd = 0.5 + (b.total / 100) * 20.0; // ← 그대로 유지
     b.x += b.vx;
     if (b.x - b.r < 0) {
       b.x = b.r;
@@ -601,7 +601,7 @@ function updateBall(b) {
     const yRange = 40;
     const yTop = b.targetY - yRange;
     const yBound = b.targetY + yRange;
-    const fixedVy = 0.2 + (b.total / 100) * 0.3; // ← Y는 항상 느리게 고정
+    const fixedVy = 0.2 + (b.total / 100) * 0.5; // ← Y는 항상 느리게 고정
 
     // patrolVy 크기를 fixedVy로 강제 유지
     b.patrolVy = (b.patrolVy > 0 ? 1 : -1) * fixedVy;

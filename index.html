@@ -318,8 +318,7 @@
 
     <!-- 2. 이 페이지만의 코드 -->
     <script>
-
-        const urlParams = new URLSearchParams(window.location.search);
+      const urlParams = new URLSearchParams(window.location.search);
       const newBallName = urlParams.get("newball");
 
       // ══════════════════════════════════════
@@ -538,51 +537,45 @@
       window.addEventListener("resize", resize);
       init();
 
+      const glowInterval = setInterval(() => {
+        const target = balls.find((b) => b.name === newBallName);
+        if (target) {
+          found = true;
+          clearInterval(glowInterval);
+          target.glowing = true;
+          setTimeout(() => {
+            target.glowing = false;
+          }, 3000);
+        }
+      }, 300);
 
+      setTimeout(() => {
+        if (!found) {
+          clearInterval(glowInterval);
+          const newBallType = urlParams.get("type") || "A";
+          const newBallTotal = parseInt(urlParams.get("total")) || 50;
+          const tempPerson = {
+            name: newBallName,
+            total: newBallTotal,
+            type: newBallType.toUpperCase(),
+            sev: Math.min(5, Math.max(1, Math.ceil(newBallTotal / 20))),
+            suspicious_group: 0, // ← 추가
+          };
 
+          const tempBall = makeBall(tempPerson, false, 0); // fromTop=false → 바로 자기 자리
+          tempBall.active = true; // fromTop=false면 active가 false일 수 있으니 명시
+          tempBall.glowing = true;
+          tempBall.patrolVy =
+            (Math.random() < 0.5 ? 1 : -1) * (0.2 + (newBallTotal / 100) * 0.4);
 
+          balls.push(tempBall);
+          setTimeout(() => {
+            tempBall.glowing = false;
+          }, 3000);
+        }
+      }, 5000);
 
-        const glowInterval = setInterval(() => {
-          const target = balls.find((b) => b.name === newBallName);
-          if (target) {
-            found = true;
-            clearInterval(glowInterval);
-            target.glowing = true;
-            setTimeout(() => {
-              target.glowing = false;
-            }, 3000);
-          }
-        }, 300);
-
-        setTimeout(() => {
-          if (!found) {
-            clearInterval(glowInterval);
-            const newBallType = urlParams.get("type") || "A";
-            const newBallTotal = parseInt(urlParams.get("total")) || 50;
-            const tempPerson = {
-              name: newBallName,
-              total: newBallTotal,
-              type: newBallType.toUpperCase(),
-              sev: Math.min(5, Math.max(1, Math.ceil(newBallTotal / 20))),
-              suspicious_group: 0, // ← 추가
-            };
-
-            const tempBall = makeBall(tempPerson, false, 0); // fromTop=false → 바로 자기 자리
-            tempBall.active = true; // fromTop=false면 active가 false일 수 있으니 명시
-            tempBall.glowing = true;
-            tempBall.patrolVy =
-              (Math.random() < 0.5 ? 1 : -1) *
-              (0.2 + (newBallTotal / 100) * 0.4);
-
-            balls.push(tempBall);
-            setTimeout(() => {
-              tempBall.glowing = false;
-            }, 3000);
-          }
-        }, 5000);
-
-        // 툴팁
-      }
+      // 툴팁
 
       const tooltip = document.getElementById("ballTooltip");
 
@@ -603,7 +596,7 @@
         }
 
         if (hovered) {
-          tooltip.textContent = hovered.name;
+          tooltip.textContent = `${hovered.type}.${hovered.name}`;
           tooltip.style.display = "block";
           tooltip.style.left = `${e.clientX + 16}px`; // 툴팁 위치는 clientX/Y 유지
           tooltip.style.top = `${e.clientY - 16}px`;

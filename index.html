@@ -318,6 +318,10 @@
 
     <!-- 2. 이 페이지만의 코드 -->
     <script>
+
+        const urlParams = new URLSearchParams(window.location.search);
+      const newBallName = urlParams.get("newball");
+
       // ══════════════════════════════════════
       // 로딩 화면
       // ══════════════════════════════════════
@@ -472,6 +476,43 @@
           );
           if (raf) cancelAnimationFrame(raf);
           loop();
+
+          // ← 여기로 이동! balls가 채워진 후에 실행
+          if (newBallName) {
+            let found = false;
+            const glowInterval = setInterval(() => {
+              const target = balls.find((b) => b.name === newBallName);
+              if (target) {
+                found = true;
+                clearInterval(glowInterval);
+                target.glowing = true;
+                setTimeout(() => {
+                  target.glowing = false;
+                }, 3000);
+              }
+            }, 300);
+
+            setTimeout(() => {
+              if (!found) {
+                clearInterval(glowInterval);
+                const newBallType = urlParams.get("type") || "A";
+                const newBallTotal = parseInt(urlParams.get("total")) || 50;
+                const tempPerson = {
+                  name: newBallName,
+                  total: newBallTotal,
+                  type: newBallType.toUpperCase(),
+                  sev: Math.min(5, Math.max(1, Math.ceil(newBallTotal / 20))),
+                  suspicious_group: 0,
+                };
+                const tempBall = makeBall(tempPerson, true, 0); // ← fromTop=true로 위에서 낙하
+                tempBall.glowing = true;
+                balls.push(tempBall);
+                setTimeout(() => {
+                  tempBall.glowing = false;
+                }, 3000);
+              }
+            }, 5000);
+          }
         });
       }
 
@@ -497,12 +538,9 @@
       window.addEventListener("resize", resize);
       init();
 
-      // 새로 생성된 공 빛 테두리 효과
-      const urlParams = new URLSearchParams(window.location.search);
-      const newBallName = urlParams.get("newball");
 
-      if (newBallName) {
-        let found = false;
+
+
 
         const glowInterval = setInterval(() => {
           const target = balls.find((b) => b.name === newBallName);
